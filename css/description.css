@@ -1,0 +1,107 @@
+/* ===== Fiches cartes ===== */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 28px;
+}
+.toolbar input,
+.toolbar select {
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(5,11,33,.72);
+  color: var(--snow);
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.toolbar input { flex: 1 1 260px; }
+.toolbar input:focus,
+.toolbar select:focus { outline: 2px solid var(--gold); border-color: transparent; }
+
+#cards-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.description-card-box {
+  --rar: #5aa0f0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 26px 20px 22px;
+  border-radius: 22px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+  overflow: hidden;
+  box-shadow: 0 18px 30px rgba(5,11,33,.18);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.description-card-box:hover { transform: translateY(-4px); border-color: rgba(255,201,51,.45); }
+.description-card-box::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: var(--rar);
+}
+.description-card-box::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  top: 20px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 0;
+  background: radial-gradient(circle, var(--rar), transparent 65%);
+  opacity: .22;
+}
+.description-card-box > * { position: relative; z-index: 1; }
+.r-rare      { --rar: #f09a2a; }
+.r-epic      { --rar: #b24fe8; }
+.r-legendary { --rar: #34d1de; }
+.r-champion,
+.r-hero      { --rar: #ffc933; }
+.r-tower     { --rar: #9aa8d8; }
+.description-card-box h3 { font-size: 1.15rem; }
+.description-card-box img {
+  width: 130px;
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,.5));
+}
+.card-stats { display: flex; gap: 12px; width: 100%; }
+.card-stats h2 {
+  flex: 1;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(5,11,33,.5);
+  font: 800 .95rem/1.35 Nunito, sans-serif;
+  color: var(--mut);
+}
+.description-card-box p {
+  margin: 0;
+  color: #d3dcf7;
+  font-size: .95rem;
+  line-height: 1.55;
+}
+.empty-desc { color: var(--mut) !important; font-style: italic; }
+.empty {
+  text-align: center;
+  color: var(--mut);
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  font-weight: 700;
+}
+
+/* État de chargement initial */
+#cards-list.loading::before {
+  content: "Chargement des cartes…";
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--mut);
+  font-weight: 700;
+  padding: 40px 0;
+}
