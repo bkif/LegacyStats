@@ -1,11 +1,12 @@
 const NAV_ITEMS = [
     { href: "./index.html", label: "Accueil" },
-    { href: "#", label: "Cartes" },
-    { href: "#", label: "Fiches" },
-    { href: "#", label: "Nouveautés" },
-    { href: "#", label: "E-sport" },
-    { href: "#", label: "CRL" },
-    { href: "#", label: "Contact" },
+    { href: "./cartes.html", label: "Cartes" },
+    { href: "./description_cartes.html", label: "Fiches" },
+    { href: "./news.html", label: "Nouveautés" },
+    { href: "./e-sport.html", label: "E-sport" },
+    { href: "./clan_site.html", label: "Clans" },
+    { href: "./crl.html", label: "CRL" },
+    { href: "./contact.html", label: "Contact" },
     { href: "https://www.youtube.com/@mhlgcr_off", label: "YouTube", external: true },
 ];
 
