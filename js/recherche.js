@@ -9,8 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!form || !input || !out) return;
 
   function imageProxyUrl(src) {
-    if (!src) return "";
-    return `${WORKER_URL}?image=${encodeURIComponent(src)}`;
+    return src || "";
   }
 
   form.addEventListener("submit", function (e) {
@@ -41,8 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const isMax = card.maxed;
     const isEvo = card.variant === "evo";
     const fallback = cardFallback(card.name, card.rarity === "legendary" ? "#71f0d0" : card.rarity === "epic" ? "#d28dfd" : "#f7c75a");
-    const imageSrc = card.image ? imageProxyUrl(card.image) : fallback;
-    const img = card.image ? `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">` : `<div class="cr-art-empty">?</div>`;
+    const imageSrc = fallback;
+    const img = `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">`;
     const classes = ["cr-tile", `cr-r-${card.rarity || 'common'}`];
     if (isMax) classes.push("max");
     if (isEvo) classes.push("cr-v-evo");
@@ -123,10 +122,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const b = battles[parseInt(btn.dataset.idx)];
         const oppCards = (b.oppCards || []).map(c => {
           const fallback = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
-          const imageSrc = c.image ? imageProxyUrl(c.image) : fallback;
+          const imageSrc = fallback;
           return `
             <div class="bd-card">
-              <img src="${esc(imageSrc || fallback)}" alt="${esc(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
+              <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
               <span class="bd-card-name">${esc(c.name)}</span>
               <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
             </div>
