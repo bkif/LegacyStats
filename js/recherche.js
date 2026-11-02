@@ -124,10 +124,10 @@ document.addEventListener("DOMContentLoaded", function () {
         el("span", "cr-time", timeStr)
       );
       
-      const meta = el("p", "cr-meta", `Contre ${b.opponents.join(" & ") || "Inconnu"}`);
+      const meta = el("p", "cr-meta", `Contre ${(b.opponents || []).join(" & ") || "Inconnu"}`);
       
       const cards = el("div", "cr-deck-small");
-      b.cards.forEach((c) => {
+      (b.cards || []).forEach((c) => {
         const variant = c.variant || "normal";
         let imgSrc = c.image;
         if (variant === "evo" && c.evoImage) imgSrc = c.evoImage;
@@ -156,17 +156,49 @@ document.addEventListener("DOMContentLoaded", function () {
     return wrap;
   }
 
+  async function fetchLive(rawTag) {
+    const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(rawTag)}`);
+    if (res.status === 404) throw { user: "Aucun joueur avec ce tag." };
+    if (res.status === 400) throw { user: "Tag invalide." };
+    if (!res.ok) throw new Error(`Worker HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // Secours : data/player.json (mis à jour chaque jour par GitHub Actions), sans les combats
+  async function fetchStatic() {
+    const res = await fetch("./data/player.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error(`player.json HTTP ${res.status}`);
+    const player = await res.json();
+    return { player, battles: [], _static: true };
+  }
+
   async function search(rawTag) {
     message("Recherche en cours...");
+    let data;
     try {
-      const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(rawTag)}`);
-      if (res.status === 404) return message("Aucun joueur avec ce tag.");
-      if (res.status === 400) return message("Tag invalide.");
-      if (!res.ok) return message("Erreur serveur.");
-      const data = await res.json();
-      out.replaceChildren(renderAll(data));
-    } catch {
-      message("Impossible de contacter le serveur.");
+      data = await fetchLive(rawTag);
+    } catch (err) {
+      if (err && err.user) return message(err.user);
+      console.error("Worker injoignable :", err);
+      const isMine = rawTag.replace("#", "").toLowerCase() === MON_TAG;
+      if (!isMine) return message("Impossible de contacter le serveur (le Worker ne répond pas).");
+      try {
+        data = await fetchStatic();
+      } catch (err2) {
+        console.error("player.json illisible :", err2);
+        return message("Impossible de contacter le serveur.");
+      }
+    }
+    try {
+      const view = renderAll(data);
+      out.replaceChildren(view);
+      if (data._static) {
+        const note = el("p", "cr-message", "Serveur en direct indisponible : données enregistrées affichées (combats non disponibles).");
+        out.prepend(note);
+      }
+    } catch (err) {
+      console.error("Erreur d'affichage :", err, data);
+      message("Les données reçues ne sont pas dans le bon format (voir la console, F12).");
     }
   }
 
