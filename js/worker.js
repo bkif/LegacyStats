@@ -44,7 +44,6 @@ export default {
         opponents: (b.opponent || []).map((o) => o.name),
         // Deck du joueur (utilisé dans ce combat)
         cards: (me.cards || []).map(mapCard),
-        oppCards: (opp.cards || []).map(mapCard),   // ← AJOUT OBLIGATOIRE
         // Deck adverse (nouveau)
         oppCards: (opp.cards || []).map(mapCard),
       };
