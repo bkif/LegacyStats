@@ -24,18 +24,12 @@ export default {
 
     const url = new URL(request.url);
     const raw = (url.searchParams.get("tag") || "").replace(/^#/, "").toUpperCase();
-    const debug = url.searchParams.get("debug") === "1";
 
     if (!/^[0-9A-Z]{3,16}$/.test(raw))
       return new Response(JSON.stringify({ error: "tag invalide" }), { status: 400, headers: CORS });
 
-    // ✅ Vérifie que la clé API est bien définie
-    if (!env.CR_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "CR_API_KEY manquante dans les variables du Worker" }),
-        { status: 500, headers: CORS }
-      );
-    }
+    if (!env.CR_API_KEY)
+      return new Response(JSON.stringify({ error: "CR_API_KEY manquante" }), { status: 500, headers: CORS });
 
     const headers = { Authorization: `Bearer ${env.CR_API_KEY}` };
 
@@ -44,47 +38,13 @@ export default {
       fetch(`${API}/players/%23${raw}/battlelog`, { headers }),
     ]);
 
-    // ✅ Debug : renvoie la réponse brute de l'API si ?debug=1
-    if (debug) {
-      const rawPlayer = await pr.text();
-      return new Response(
-        JSON.stringify({
-          playerStatus: pr.status,
-          playerHeaders: [...pr.headers].reduce((o, [k, v]) => ({ ...o, [k]: v }), {}),
-          playerBody: rawPlayer.slice(0, 2000),
-        }),
-        { headers: CORS }
-      );
-    }
-
     if (pr.status === 404)
-      return new Response(JSON.stringify({ error: "joueur introuvable" }), { status: 404, headers: CORS });
-
+      return new Response(JSON.stringify({ error: "introuvable" }), { status: 404, headers: CORS });
     if (!pr.ok)
-      return new Response(
-        JSON.stringify({
-          error: "api a renvoyé " + pr.status,
-          hint: pr.status === 403
-            ? "Clé API invalide ou restreinte par IP. Va sur developer.clashroyale.com et coche 'Allow any IP'."
-            : "Vérifie ta clé API dans les secrets du Worker.",
-        }),
-        { status: 502, headers: CORS }
-      );
+      return new Response(JSON.stringify({ error: "api" }), { status: 502, headers: CORS });
 
     const p = await pr.json();
     const log = br.ok ? await br.json() : [];
-
-    // ✅ Vérifie que cards existe
-    if (!p.cards || !Array.isArray(p.cards)) {
-      return new Response(
-        JSON.stringify({
-          error: "player.cards absent de la réponse API",
-          hint: "L'API n'a pas renvoyé la collection. Vérifie que le tag est correct et que la clé n'est pas restreinte par IP.",
-          receivedKeys: Object.keys(p),
-        }),
-        { status: 502, headers: CORS }
-      );
-    }
 
     const battles = log.slice(0, 20).map((b) => {
       const me = b.team?.[0] ?? {};
@@ -92,41 +52,30 @@ export default {
       const crowns = me.crowns ?? 0;
       const oppCrowns = opp.crowns ?? 0;
 
+      // 🛡️ Sécurité : on cherche les cartes à plusieurs endroits possibles selon l'API
+      const myCardsRaw = me.cards || me.deck || me.team?.[0]?.cards || [];
+      const oppCardsRaw = opp.cards || opp.deck || opp.team?.[0]?.cards || [];
+
       return {
         result: crowns > oppCrowns ? "win" : crowns < oppCrowns ? "loss" : "draw",
         crowns,
         oppCrowns,
         time: isoTime(b.battleTime),
         opponents: (b.opponent || []).map((o) => o.name),
-        cards: (me.cards || []).map(mapCard),
-        oppCards: (opp.cards || []).map(mapCard),
+        cards: myCardsRaw.map(mapCard),
+        oppCards: oppCardsRaw.map(mapCard),
       };
     });
 
     const player = {
-      name: p.name,
-      tag: p.tag,
-      level: p.expLevel,
-      trophies: p.trophies,
-      bestTrophies: p.bestTrophies,
-      wins: p.wins,
-      losses: p.losses,
-      battleCount: p.battleCount,
-      threeCrownWins: p.threeCrownWins,
-      totalDonations: p.totalDonations,
-      donationsReceived: p.donationsReceived,
-      warDayWins: p.warDayWins,
-      clanWarTrophies: p.clanWarTrophies,
-      challengeMaxWins: p.challengeMaxWins,
-      challengeCardsWon: p.challengeCardsWon,
-      tournamentBattleCount: p.tournamentBattleCount,
-      tournamentCardsWon: p.tournamentCardsWon,
-      role: p.role,
-      arena: p.arena?.name,
-      clan: p.clan?.name,
-      favouriteCard: p.currentFavouriteCard?.name,
+      name: p.name, tag: p.tag, level: p.expLevel, trophies: p.trophies, bestTrophies: p.bestTrophies,
+      wins: p.wins, losses: p.losses, battleCount: p.battleCount, threeCrownWins: p.threeCrownWins,
+      totalDonations: p.totalDonations, donationsReceived: p.donationsReceived, warDayWins: p.warDayWins,
+      clanWarTrophies: p.clanWarTrophies, challengeMaxWins: p.challengeMaxWins, challengeCardsWon: p.challengeCardsWon,
+      tournamentBattleCount: p.tournamentBattleCount, tournamentCardsWon: p.tournamentCardsWon,
+      role: p.role, arena: p.arena?.name, clan: p.clan?.name, favouriteCard: p.currentFavouriteCard?.name,
       deck: (p.currentDeck || []).map(mapCard),
-      cards: p.cards.map(mapCard), // ✅ maintenant garanti non-vide
+      cards: (p.cards || []).map(mapCard),
     };
 
     return new Response(JSON.stringify({ player, battles }), {

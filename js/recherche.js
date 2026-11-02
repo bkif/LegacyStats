@@ -69,7 +69,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return slot;
   }
 
-  /* ---------- profil ---------- */
   function renderHeader(p) {
     const box = el("div", "cr-card");
     const head = el("div", "cr-head");
@@ -103,7 +102,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return box;
   }
 
-  /* ---------- deck actuel ---------- */
   function renderDeck(p) {
     const box = el("div", "cr-card");
     const head = el("div", "cr-sectionhead");
@@ -124,7 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return box;
   }
 
-  /* ---------- combats ---------- */
   function resultOf(b) {
     if (b.result === "win") return "win";
     if (b.result === "loss") return "loss";
@@ -177,7 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
         `${results[0] === "win" ? "🔥 Série de" : "💀 Série de"} ${streak} ${results[0] === "win" ? "victoires" : "défaites"}`));
     }
 
-    // Grille 20 carrés W/L
     const strip = el("div", "cr-form20");
     list.forEach((b, i) => {
       const r = results[i];
@@ -191,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     box.append(strip);
 
-    // Détails
+    // Détails de chaque combat
     list.forEach((b, i) => {
       const r = results[i];
       const label = r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité";
@@ -212,24 +208,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Ton deck
       const myDeck = el("div", "bd-deck");
-      myDeck.append(el("h5", "", `Ton deck (${(b.cards || []).length})`));
+      myDeck.append(el("h5", "", `TON DECK (${(b.cards || []).length})`));
       const myCards = el("div", "bd-cards");
       (b.cards || []).forEach((c) => myCards.append(miniCardEl(c)));
-      if (!myCards.children.length) myCards.append(el("p", "cr-message", "Deck indisponible."));
+      if (!myCards.children.length) myCards.append(el("p", "cr-message", "Indisponible."));
       myDeck.append(myCards);
       detail.append(myDeck);
 
-      // Deck adverse — extraction défensive
-      const oppCards = b.oppCards || b.opponentCards
-        || (Array.isArray(b.opponent) && b.opponent[0]?.cards)
-        || [];
+      // Deck adverse
+      const oppCards = b.oppCards || [];
       const oppDeck = el("div", "bd-deck");
-      oppDeck.append(el("h5", "", `Deck adverse (${oppCards.length})`));
+      oppDeck.append(el("h5", "", `DECK ADVERSE (${oppCards.length})`));
       const oppGrid = el("div", "bd-cards");
       if (oppCards.length) {
         oppCards.forEach((c) => oppGrid.append(miniCardEl(c)));
       } else {
-        oppGrid.append(el("p", "cr-message", "Deck adverse non fourni par le Worker → redéploie-le avec oppCards."));
+        oppGrid.append(el("p", "cr-message", "L'API n'a pas renvoyé le deck adverse pour ce combat."));
       }
       oppDeck.append(oppGrid);
       detail.append(oppDeck);
@@ -240,7 +234,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return box;
   }
 
-  /* ---------- collection TOUJOURS VISIBLE ---------- */
   const RARITY_ORDER = { champion: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
 
   function renderCollection(p) {
@@ -250,17 +243,14 @@ document.addEventListener("DOMContentLoaded", function () {
     box.append(head);
 
     if (!p.cards || !p.cards.length) {
-      box.append(el("p", "cr-message",
-        "Aucune carte reçue. Le Worker doit renvoyer player.cards (redéploie avec wrangler deploy)."));
+      box.append(el("p", "cr-message", "Aucune carte reçue. Vérifie le Worker."));
       return box;
     }
 
     const all = p.cards.map(normCard);
     const maxed = all.filter((c) => c.maxed).length;
     const leveled = all.filter((c) => has(c.level));
-    const avg = leveled.length
-      ? (leveled.reduce((a, c) => a + c.level, 0) / leveled.length).toFixed(1)
-      : "—";
+    const avg = leveled.length ? (leveled.reduce((a, c) => a + c.level, 0) / leveled.length).toFixed(1) : "—";
 
     const chips = el("div", "cr-chips");
     chips.append(
@@ -294,7 +284,6 @@ document.addEventListener("DOMContentLoaded", function () {
       .forEach(([v, t]) => { const o = el("option", "", t); o.value = v; sort.append(o); });
 
     bar.append(search, rarity, sort);
-
     const grid = el("div", "cr-collgrid");
 
     function draw() {
@@ -315,7 +304,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }[sort.value] || ((a, b) => 0);
 
       list.sort(by);
-
       if (!list.length) {
         grid.replaceChildren(el("p", "cr-empty", "Aucune carte ne correspond."));
         return;
@@ -332,15 +320,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return box;
   }
 
-  /* ---------- assemblage robuste ---------- */
   function renderAll(data) {
     const wrap = el("div");
     const p = data.player || {};
     const battles = data.battles ?? p.battles ?? [];
-
     const safe = (fn, label) => {
-      try { return fn(); }
-      catch (e) {
+      try { return fn(); } catch (e) {
         console.error(`Erreur section ${label}:`, e);
         const box = el("div", "cr-card");
         box.append(el("p", "cr-message", `Erreur section ${label} (voir F12).`));
@@ -379,19 +364,17 @@ document.addEventListener("DOMContentLoaded", function () {
       data = await fetchLive(rawTag);
     } catch (err) {
       if (err && err.user) return message(err.user);
-      console.error("Worker injoignable :", err);
       if (rawTag.replace("#", "").toLowerCase() !== MON_TAG)
-        return message("Impossible de contacter le serveur (Worker injoignable).");
+        return message("Impossible de contacter le serveur.");
       try { data = await fetchStatic(); }
-      catch (err2) { console.error("player.json illisible :", err2); return message("Impossible de contacter le serveur."); }
+      catch (err2) { return message("Impossible de contacter le serveur."); }
     }
     try {
       const view = renderAll(data);
       out.replaceChildren(view);
       if (data._static) out.prepend(el("p", "cr-message", "Serveur en direct indisponible : données enregistrées."));
     } catch (err) {
-      console.error("Erreur globale :", err, data);
-      message("Les données reçues ne sont pas dans le bon format (voir F12).");
+      message("Format de données invalide.");
     }
   }
 
