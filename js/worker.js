@@ -36,6 +36,27 @@ export default {
       return new Response(null, { headers: CORS });
 
     const url = new URL(request.url);
+    const imageUrl = url.searchParams.get("image");
+
+    if (imageUrl) {
+      try {
+        const remote = await fetch(imageUrl, { cf: { image: { quality: 80, fit: "scale-down" } } });
+        if (!remote.ok) {
+          return new Response("Image introuvable", { status: 404, headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" } });
+        }
+        const body = await remote.arrayBuffer();
+        return new Response(body, {
+          headers: {
+            ...CORS,
+            "Content-Type": remote.headers.get("Content-Type") || "image/png",
+            "Cache-Control": "public, max-age=86400, immutable",
+          },
+        });
+      } catch {
+        return new Response("Image indisponible", { status: 502, headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" } });
+      }
+    }
+
     const raw = (url.searchParams.get("tag") || "").replace(/^#/, "").toUpperCase();
 
     if (!/^[0-9A-Z]{3,16}$/.test(raw))
