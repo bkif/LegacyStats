@@ -1,173 +1,78 @@
-/* ===== Module de recherche ===== */
-.cr-search {
-  position: relative;
-  z-index: 1;
-  max-width: 1180px;
-  margin: 0 auto 40px;
-  padding: 0 16px;
-  color: #fff;
-}
-
+/* ===== Recherche de joueur ===== */
 .cr-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: rgba(12, 24, 60, .82);
-  border: 2px solid rgba(245, 197, 66, .6);
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+  display: flex; flex-direction: column; gap: 8px; max-width: 560px; margin: 0 auto; text-align: left;
 }
-.cr-form label {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gold, #ffc933);
-}
+.cr-form label { font-weight: 800; color: var(--mut); font-size: .9rem; padding-left: 6px; }
 .cr-form-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: flex; gap: 8px; padding: 8px; border-radius: 20px;
+  background: rgba(5,11,33,.7); border: 2px solid rgba(255,201,51,.55);
+  box-shadow: 0 0 0 6px rgba(255,201,51,.08), var(--shadow);
 }
 .cr-form input {
-  flex: 1 1 200px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 2px solid #f5c542;
-  background: rgba(10, 20, 50, .9);
-  color: #fff;
-  font-size: 1.05rem;
+  flex: 1 1 160px; min-width: 0; padding: 12px 16px; border: 0; border-radius: 12px;
+  background: transparent; color: #fff; font: 800 1.2rem Nunito, sans-serif; letter-spacing: .04em;
 }
+.cr-form input::placeholder { color: rgba(169,184,230,.5); }
+.cr-form input:focus-visible { outline: none; }
 .cr-form button {
-  padding: 12px 26px;
-  border: 0;
-  border-radius: 10px;
-  background: linear-gradient(#ffd34d, #f29a00);
-  color: #3a2300;
-  font-weight: 800;
-  font-size: 1.05rem;
-  cursor: pointer;
+  padding: 12px 24px; border: 0; border-radius: 12px; cursor: pointer;
+  background: linear-gradient(#ffd75e, #f2a000); color: #2b1a00; font: 400 1rem var(--display);
+  box-shadow: 0 4px 0 var(--gold-d);
 }
+.cr-form button:active { transform: translateY(3px); box-shadow: none; }
 
+#search-result { margin-top: 28px; }
 .cr-message {
-  text-align: center;
-  font-size: 1.1rem;
-  padding: 20px;
-  color: #fff;
+  text-align: center; padding: 22px; border-radius: var(--radius);
+  background: rgba(255,255,255,.05); border: 1px dashed var(--line); color: var(--mut);
 }
 
-/* Blocs de profil */
 .cr-card {
-  background: rgba(12, 24, 60, .82);
-  border: 2px solid rgba(245, 197, 66, .6);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid var(--line); border-radius: 22px; padding: 24px; margin-bottom: 20px;
 }
-.cr-name { margin: 0; font-size: 2rem; color: #ffd34d; }
-.cr-sub { margin: 4px 0 12px; opacity: .85; }
-.cr-title { margin: 0 0 10px; font-size: 1.3rem; color: #ffd34d; }
+.cr-name { font-size: clamp(1.8rem, 5vw, 2.8rem); color: var(--gold); }
+.cr-sub { margin: 6px 0 0; color: var(--mut); font-weight: 700; }
+.cr-title { margin: 0 0 16px; font-size: 1.3rem; }
 
-/* Grille de stats */
-.cr-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-}
-.cr-stat {
-  background: rgba(255, 255, 255, .08);
-  border-radius: 12px;
-  padding: 12px;
-  text-align: center;
-}
-.cr-stat-value { display: block; font-size: 1.4rem; color: #fff; font-weight: 800; }
-.cr-stat-label { display: block; font-size: .85rem; opacity: .75; }
+.cr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.cr-stat { padding: 14px 12px; border-radius: 14px; background: rgba(5,11,33,.5); border: 1px solid var(--line); }
+.cr-stat:first-child { background: rgba(255,201,51,.12); border-color: rgba(255,201,51,.5); }
+.cr-stat-value { display: block; font: 800 1.45rem/1.2 Nunito, sans-serif; color: #fff; overflow-wrap: anywhere; }
+.cr-stat-label { display: block; margin-top: 2px; font-size: .82rem; color: var(--mut); }
 
-/* Mise en page colonnes (Deck à gauche, Combats à droite) */
-.cr-cols {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .cr-cols { grid-template-columns: 1fr; }
-}
+.cr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .cr-cols { grid-template-columns: 1fr; } }
 
-/* Cartes du deck */
-.cr-deckgrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 14px;
-}
-.cr-slot {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3/4;
-}
-.cr-tile {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-  background: #141c30;
-  border: 2px solid #556;
-  position: relative;
-  overflow: hidden;
-}
-.cr-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+/* deck */
+.cr-deckgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.cr-slot { aspect-ratio: 3 / 4; }
+.cr-tile { position: relative; width: 100%; height: 100%; border-radius: 12px; background: #0d1840; border: 3px solid #5d6aa0; }
+.cr-art { width: 100%; height: 100%; border-radius: 9px; overflow: hidden; }
+.cr-art img { width: 100%; height: 100%; object-fit: cover; }
 .cr-el {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 24px;
-  height: 24px;
-  background: radial-gradient(circle at 35% 30%, #f5a0ff, #c53bd1 55%, #7b1389);
-  border: 2px solid #f3c8ff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: #fff;
-  z-index: 4;
+  position: absolute; top: -9px; left: -9px; z-index: 4; width: 26px; height: 26px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--pink); border: 2px solid #fff; font-weight: 800; font-size: .85rem; color: #fff;
 }
 .cr-lv {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,.85));
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.8rem;
-  padding: 10px 0 4px;
-  color: #fff;
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 0; text-align: center;
+  background: rgba(5,11,33,.85); font-weight: 800; font-size: .72rem; border-radius: 0 0 9px 9px;
 }
+.cr-r-common { border-color: #5aa0f0; } .cr-r-rare { border-color: #f09a2a; }
+.cr-r-epic { border-color: #b24fe8; } .cr-r-legendary { border-color: #34d1de; }
+.cr-r-champion, .cr-r-hero { border-color: #ffc933; }
+.cr-v-evo { border-color: var(--pink); box-shadow: 0 0 18px rgba(224,59,214,.55); }
+.cr-v-hero { border-color: var(--gold); box-shadow: 0 0 18px rgba(255,201,51,.5); }
 
-/* Raretés */
-.cr-r-common { border-color: #4b86c9; }
-.cr-r-rare { border-color: #d4861a; }
-.cr-r-epic { border-color: #a043cf; }
-.cr-r-legendary { border-color: #2bb9c4; }
-.cr-r-champion { border-color: #d9a400; }
-
-/* Combats */
+/* combats */
 .cr-battles { display: flex; flex-direction: column; gap: 10px; }
-.cr-battle {
-  border-left: 6px solid #888;
-  background: rgba(255, 255, 255, .07);
-  border-radius: 10px;
-  padding: 10px 14px;
-}
-.cr-win { border-left-color: #3ddc6b; background: rgba(61, 220, 107, .12); }
-.cr-loss { border-left-color: #ff4d4d; background: rgba(255, 77, 77, .12); }
-.cr-result { font-size: 1.1rem; font-weight: 700; }
-.cr-win .cr-result { color: #3ddc6b; }
-.cr-loss .cr-result { color: #ff6b6b; }
+.cr-battle { padding: 12px 14px; border-radius: 14px; background: rgba(5,11,33,.5); border: 1px solid var(--line); }
+.cr-battle-head { display: flex; align-items: center; gap: 12px; }
+.cr-badge { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; font-weight: 800; color: #04210f; }
+.cr-badge-win { background: var(--ok); } .cr-badge-loss { background: var(--danger); color: #2a0006; }
+.cr-score { font-weight: 800; }
+.cr-time { margin-left: auto; font-size: .85rem; color: var(--mut); font-weight: 700; }
+.cr-meta { margin: 6px 0 8px; font-size: .88rem; color: var(--mut); }
+.cr-deck-small { display: flex; flex-wrap: wrap; gap: 4px; }
+.cr-deck-small img { width: 34px; border-radius: 6px; }

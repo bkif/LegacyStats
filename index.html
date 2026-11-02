@@ -10,150 +10,56 @@
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
 <link rel="stylesheet" href="./css/home.css">
-<style>
-/* CSS complet pour la recherche */
-.cr-search { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto 40px; padding: 0 16px; color: #fff; }
-.cr-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; padding: 20px; background: rgba(12, 24, 60, .82); border: 2px solid rgba(245, 197, 66, .6); border-radius: 16px; }
-.cr-form label { font-size: 1rem; font-weight: 700; color: #ffc933; }
-.cr-form-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.cr-form input { flex: 1 1 200px; padding: 12px 16px; border-radius: 10px; border: 2px solid #f5c542; background: rgba(10, 20, 50, .9); color: #fff; font-size: 1.05rem; }
-.cr-form button { padding: 12px 26px; border: 0; border-radius: 10px; background: linear-gradient(#ffd34d, #f29a00); color: #3a2300; font-weight: 800; cursor: pointer; }
-.cr-message { text-align: center; font-size: 1.1rem; padding: 20px; color: #fff; }
-.cr-card { background: rgba(12, 24, 60, .82); border: 2px solid rgba(245, 197, 66, .6); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-.cr-name { margin: 0; font-size: 2rem; color: #ffd34d; }
-.cr-sub { margin: 4px 0 12px; opacity: .85; }
-.cr-title { margin: 0 0 10px; font-size: 1.3rem; color: #ffd34d; }
-
-/* Grille des stats */
-.cr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
-.cr-stat { background: rgba(255, 255, 255, .08); border-radius: 12px; padding: 12px; text-align: center; }
-.cr-stat-value { display: block; font-size: 1.4rem; color: #fff; font-weight: 800; }
-.cr-stat-label { display: block; font-size: 0.8rem; opacity: .75; }
-
-/* Colonnes Deck / Combats */
-.cr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-@media (max-width: 900px) { .cr-cols { grid-template-columns: 1fr; } }
-
-/* Deck */
-.cr-deckgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
-.cr-slot { position: relative; width: 100%; aspect-ratio: 3/4; }
-.cr-tile { width: 100%; height: 100%; border-radius: 8px; background: #141c30; border: 3px solid #556; position: relative; overflow: hidden; }
-.cr-art img { width: 100%; height: 100%; object-fit: cover; }
-.cr-el { position: absolute; top: -6px; left: -6px; width: 22px; height: 22px; background: #d02bd9; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #fff; z-index: 4; }
-.cr-lv { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.8); text-align: center; font-weight: 700; font-size: 0.75rem; padding: 4px 0; color: #fff; }
-
-/* Couleurs des bordures selon la rareté */
-.cr-r-common { border-color: #4b86c9; } .cr-r-rare { border-color: #d4861a; } 
-.cr-r-epic { border-color: #a043cf; } .cr-r-legendary { border-color: #2bb9c4; } 
-.cr-r-champion { border-color: #d9a400; }
-
-/* Combats */
-.cr-battles { display: flex; flex-direction: column; gap: 10px; }
-.cr-battle { border-left: 5px solid #888; background: rgba(255, 255, 255, .05); border-radius: 8px; padding: 12px; }
-.cr-win { border-left-color: #3ddc6b; background: rgba(61, 220, 107, .1); }
-.cr-loss { border-left-color: #ff4d4d; background: rgba(255, 77, 77, .1); }
-.cr-result { font-size: 1rem; font-weight: 800; }
-.cr-win .cr-result { color: #3ddc6b; } .cr-loss .cr-result { color: #ff4d4d; }
-.cr-score { font-weight: 800; font-size: 1rem; }
-.cr-meta { margin: 4px 0; font-size: 0.85rem; opacity: .8; }
-/* ===== EFFET ÉVOLUTION & HÉROS ===== */
-
-/* Conteneur de l'image */
-.cr-v-evo .cr-art, 
-.cr-v-hero .cr-art {
-  overflow: visible;
-}
-
-/* Effet de halo (glow) violet pour les évolutions, arc-en-ciel pour les héros */
-.cr-v-evo .cr-art img {
-  filter: drop-shadow(0 0 8px #d02bd9); /* Lueur violette */
-  transform: scale(1.05); /* Légèrement plus grande pour déborder */
-}
-
-.cr-v-hero .cr-art img {
-  filter: drop-shadow(0 0 8px #ffc933); /* Lueur dorée */
-  transform: scale(1.05);
-}
-
-/* On adapte la bordure de la tuile pour ces variantes */
-.cr-tile.cr-v-evo {
-  border-color: #d02bd9;
-  background: linear-gradient(135deg, #2a1040, #141c30);
-}
-
-.cr-tile.cr-v-hero {
-  border-color: #ffc933;
-  background: linear-gradient(135deg, #403010, #141c30);
-}
-/* Style des combats */
-.cr-battle { border-left: none; background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px; }
-.cr-battle-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-
-/* Les petits carrés V et D */
-.cr-badge {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  font-weight: 900;
-  font-size: 0.85rem;
-  color: #fff;
-}
-.cr-badge-win { background-color: #3ddc6b; box-shadow: 0 0 8px rgba(61, 220, 107, 0.5); }
-.cr-badge-loss { background-color: #ff4d4d; box-shadow: 0 0 8px rgba(255, 77, 77, 0.5); }
-
-/* Score et Heure */
-.cr-score { font-weight: 800; font-size: 1rem; color: #fff; }
-.cr-time { margin-left: auto; font-size: 0.85rem; opacity: 0.7; font-weight: 600; }
-.cr-deck-small { display: flex; gap: 4px; flex-wrap: wrap; }
-</style>
+<link rel="stylesheet" href="./css/recherche.css">
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
 
 <header class="top">
   <div class="bar">
-    <a href="./index.html" aria-label="Accueil"><img src="./images/logo_clash_royale.png" alt="" width="44" height="44"></a>
+    <a href="./index.html" aria-label="MH Legacy, accueil"><img src="./images/logo_clash_royale.png" alt="" width="42" height="42"></a>
     <nav class="nav" aria-label="Navigation principale"><div class="nav-links"></div></nav>
   </div>
 </header>
 
-<div class="hero">
-  <div class="hero-in">
-    <div>
-      <h1>MH Legacy</h1>
-      <p>Le site Clash Royale suisse. Copie les decks, regarde tes stats et tes 20 derniers combats.</p>
-      <div class="btns">
-        <a class="btn" href="#joueur">Voir mes stats</a>
-      </div>
-    </div>
-  </div>
-</div>
-
 <main id="contenu">
-  <section id="joueur">
-    <h2>Stats d’un joueur</h2>
-    <p class="lead">Entre un tag pour voir le profil, le deck et les 20 derniers combats.</p>
-    <div class="cr-search" style="padding:0">
+  <section class="hero" aria-labelledby="titre">
+    <span class="drop a" aria-hidden="true"></span>
+    <span class="drop b" aria-hidden="true"></span>
+    <div class="hero-in">
+      <h1 id="titre">MH Legacy</h1>
+      <p>Le site Clash Royale suisse. Entre un tag et retrouve le profil, le deck et les 20 derniers combats de n’importe quel joueur.</p>
       <form id="search-form" class="cr-form" onsubmit="return false;">
         <label for="tag-input">Tag du joueur</label>
         <div class="cr-form-row">
           <input type="text" id="tag-input" required maxlength="16" autocomplete="off" placeholder="#GG829JGY">
-          <button type="submit">Rechercher</button>
+          <button type="submit">Chercher</button>
         </div>
       </form>
-      <div id="search-result" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="joueur" aria-label="Résultat de la recherche">
+    <div id="search-result" aria-live="polite"></div>
+  </section>
+
+  <section class="qs" aria-labelledby="explorer">
+    <h2 id="explorer">Explorer le site</h2>
+    <div class="quick">
+      <a href="./cartes.html"><span class="ico" aria-hidden="true">🃏</span><b>Deck builder</b><span>Compose ton deck et calcule l’élixir moyen.</span></a>
+      <a href="./description_cartes.html"><span class="ico" aria-hidden="true">🔎</span><b>Fiches</b><span>Toutes les cartes, filtrées par rareté.</span></a>
+      <a href="./news.html"><span class="ico" aria-hidden="true">📰</span><b>Nouveautés</b><span>Équilibrages et saisons.</span></a>
+      <a href="./e-sport.html"><span class="ico" aria-hidden="true">🏆</span><b>E-sport</b><span>Les équipes et leurs palmarès.</span></a>
+      <a href="./crl.html"><span class="ico" aria-hidden="true">🎬</span><b>CRL</b><span>Les moments forts de la ligue.</span></a>
     </div>
   </section>
 </main>
 
 <footer>
-  <p>Ce contenu n’est pas affilié à Supercell.</p>
+  <p>Ce contenu n’est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell, et Supercell n’est pas responsable de ce contenu.</p>
 </footer>
 
 <script src="./js/nav.js"></script>
-<script src="./js/recherche.js?v=15"></script>
+<script src="./js/recherche.js?v=16"></script>
 </body>
 </html>

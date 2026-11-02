@@ -49,7 +49,7 @@ function render() {
 function buildCard(c) {
     const meta = RARITY[c.rarity] || { label: c.rarity || "—", color: "#fff" };
     const article = document.createElement("article");
-    article.className = "description-card-box";
+    article.className = `description-card-box r-${c.rarity || "common"}`;
     article.id = c.id;
 
     const desc = c.description
