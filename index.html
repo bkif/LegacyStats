@@ -1,85 +1,65 @@
-const API = "https://proxy.royaleapi.dev/v1";
-const CORS = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json; charset=utf-8" };
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MH Legacy, Clash Royale Suisse 🇨🇭</title>
+<link rel="icon" href="./images/logo_clash_royale.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="data/css/style.css">
+<link rel="stylesheet" href="data/css/home.css">
+<link rel="stylesheet" href="data/css/recherche.css">
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
 
-const mapCard = (c) => ({
-  name: c.name,
-  level: c.level,
-  maxLevel: c.maxLevel,
-  rarity: c.rarity,
-  elixir: c.elixirCost,
-  count: c.count,
-  variant: c.evolutionLevel > 0 ? "evo" : "normal",
-  image: c.iconUrls?.medium,
-  evoImage: c.iconUrls?.evolutionMedium,
-  heroImage: c.iconUrls?.heroMedium,
-});
+<header class="top">
+  <div class="bar">
+    <a href="./index.html" aria-label="MH Legacy, accueil"><img src="./images/logo_clash_royale.png" alt="" width="42" height="42"></a>
+    <nav class="nav" aria-label="Navigation principale"><div class="nav-links"></div></nav>
+  </div>
+</header>
 
-const isoTime = (t) =>
-  t ? t.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, "$1-$2-$3T$4:$5:$6") : null;
+<main id="contenu">
+  <section class="hero" aria-labelledby="titre">
+    <span class="drop a" aria-hidden="true"></span>
+    <span class="drop b" aria-hidden="true"></span>
+    <div class="hero-in">
+      <h1 id="titre">MH Legacy</h1>
+      <p>Le site Clash Royale suisse. Entre un tag et retrouve le profil, le deck et les 20 derniers combats de n’importe quel joueur.</p>
+      <form id="search-form" class="cr-form" onsubmit="return false;">
+        <label for="tag-input">Tag du joueur</label>
+        <div class="cr-form-row">
+          <input type="text" id="tag-input" required maxlength="16" autocomplete="off" placeholder="#GG829JGY">
+          <button type="submit">Chercher</button>
+        </div>
+      </form>
+    </div>
+  </section>
 
-export default {
-  async fetch(request, env) {
-    if (request.method === "OPTIONS")
-      return new Response(null, { headers: { ...CORS, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+  <section id="joueur" aria-label="Résultat de la recherche">
+    <div id="search-result" aria-live="polite"></div>
+  </section>
 
-    const url = new URL(request.url);
-    const raw = (url.searchParams.get("tag") || "").replace(/^#/, "").toUpperCase();
+  <section class="qs" aria-labelledby="explorer">
+    <h2 id="explorer">Explorer le site</h2>
+    <div class="quick">
+      <a href="./cartes.html"><span class="ico" aria-hidden="true">🃏</span><b>Deck builder</b><span>Compose ton deck et calcule l’élixir moyen.</span></a>
+      <a href="./description_cartes.html"><span class="ico" aria-hidden="true">🔎</span><b>Fiches</b><span>Toutes les cartes, filtrées par rareté.</span></a>
+      <a href="./news.html"><span class="ico" aria-hidden="true">📰</span><b>Nouveautés</b><span>Équilibrages et saisons.</span></a>
+      <a href="./e-sport.html"><span class="ico" aria-hidden="true">🏆</span><b>E-sport</b><span>Les équipes et leurs palmarès.</span></a>
+      <a href="./crl.html"><span class="ico" aria-hidden="true">🎬</span><b>CRL</b><span>Les moments forts de la ligue.</span></a>
+    </div>
+  </section>
+</main>
 
-    if (!/^[0-9A-Z]{3,16}$/.test(raw))
-      return new Response(JSON.stringify({ error: "tag invalide" }), { status: 400, headers: CORS });
+<footer>
+  <p>Ce contenu n’est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell, et Supercell n’est pas responsable de ce contenu.</p>
+</footer>
 
-    if (!env.CR_API_KEY)
-      return new Response(JSON.stringify({ error: "CR_API_KEY manquante" }), { status: 500, headers: CORS });
-
-    const headers = { Authorization: `Bearer ${env.CR_API_KEY}` };
-
-    const [pr, br] = await Promise.all([
-      fetch(`${API}/players/%23${raw}`, { headers }),
-      fetch(`${API}/players/%23${raw}/battlelog`, { headers }),
-    ]);
-
-    if (pr.status === 404)
-      return new Response(JSON.stringify({ error: "introuvable" }), { status: 404, headers: CORS });
-    if (!pr.ok)
-      return new Response(JSON.stringify({ error: "api" }), { status: 502, headers: CORS });
-
-    const p = await pr.json();
-    const log = br.ok ? await br.json() : [];
-
-    const battles = log.slice(0, 20).map((b) => {
-      const me = b.team?.[0] ?? {};
-      const opp = b.opponent?.[0] ?? {};
-      
-      const crowns = me.crowns ?? 0;
-      const oppCrowns = opp.crowns ?? 0;
-
-      // 🛡️ Extraction robuste pour le deck adverse (l'API met parfois .cards, parfois .deck)
-      const myCardsRaw = me.cards || me.deck || [];
-      const oppCardsRaw = opp.cards || opp.deck || [];
-
-      return {
-        result: crowns > oppCrowns ? "win" : crowns < oppCrowns ? "loss" : "draw",
-        crowns,
-        oppCrowns,
-        time: isoTime(b.battleTime),
-        opponents: (b.opponent || []).map((o) => o.name),
-        cards: myCardsRaw.map(mapCard),
-        oppCards: oppCardsRaw.map(mapCard),
-      };
-    });
-
-    const player = {
-      name: p.name, tag: p.tag, level: p.expLevel, trophies: p.trophies, bestTrophies: p.bestTrophies,
-      wins: p.wins, losses: p.losses, battleCount: p.battleCount, threeCrownWins: p.threeCrownWins,
-      totalDonations: p.totalDonations, donationsReceived: p.donationsReceived, warDayWins: p.warDayWins,
-      clanWarTrophies: p.clanWarTrophies, challengeMaxWins: p.challengeMaxWins, challengeCardsWon: p.challengeCardsWon,
-      role: p.role, arena: p.arena?.name, clan: p.clan?.name, favouriteCard: p.currentFavouriteCard?.name,
-      deck: (p.currentDeck || []).map(mapCard),
-      cards: (p.cards || []).map(mapCard),
-    };
-
-    return new Response(JSON.stringify({ player, battles }), {
-      headers: { ...CORS, "Cache-Control": "public, max-age=60" },
-    });
-  },
-};
+<script src="js/nav.js"></script>
+<script src="js/recherche.js?v=16"></script>
+</body>
+</html>
