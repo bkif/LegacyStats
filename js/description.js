@@ -24,6 +24,8 @@ const RARITY = {
     epic:      { label: "Épique",     color: "#e2a2ff" },
     legendary: { label: "Légendaire", color: "#7ff3f8" },
     champion:  { label: "Champion",   color: "#ffe27a" },
+    hero:      { label: "Héros",      color: "#ffc933" },
+    tower:     { label: "Tour",       color: "#cfd8ff" },
 };
 
 function render() {
@@ -55,8 +57,8 @@ function buildCard(c) {
         : `<p class="empty-desc">Description non disponible via l'API.</p>`;
 
     article.innerHTML = `
-        <h4>${c.name}</h4>
-        <img src="${c.image}" alt="${c.name}" loading="lazy" decoding="async">
+        <h3>${c.name}</h3>
+        <img src="${c.image}" alt="${c.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=FALLBACK_IMG">
         <div class="card-stats">
             <h2 style="color:${meta.color}">Rareté<br>${meta.label}</h2>
             <h2>Type<br>${c.type ?? "—"}</h2>

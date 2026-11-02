@@ -23,7 +23,7 @@ function renderCards() {
         el.draggable = true;
         el.dataset.id = card.id;
         el.setAttribute("aria-label", `${card.name}, ${card.elixir} élixir`);
-        el.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async">`;
+        el.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=FALLBACK_IMG">`;
 
         el.addEventListener("dragstart", e => {
             e.dataTransfer.setData("text/plain", card.id);
@@ -77,7 +77,7 @@ function setSlot(slot, id) {
     const card = db.cards.find(c => c.id === id);
     if (!card) return;
     slot.dataset.cardId = id;
-    slot.innerHTML = `<img src="${card.image}" alt="${card.name}">`;
+    slot.innerHTML = `<img src="${card.image}" alt="${card.name}" onerror="this.onerror=null;this.src=FALLBACK_IMG">`;
     slot.setAttribute("aria-label", `${card.name} dans le deck`);
     sync();
 }

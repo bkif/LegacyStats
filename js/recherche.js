@@ -85,11 +85,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function renderDeck(p) {
     const box = el("div", "cr-card");
-    box.append(el("h4", "cr-title", "Deck actuel"));
+    box.append(el("h3", "cr-title", "Deck actuel"));
     const grid = el("div", "cr-deckgrid");
     const sortedDeck = [...(p.deck || [])].sort((a, b) => {
       const order = { evo: 0, hero: 1, normal: 2 };
-      return (order[a.variant || "normal"] || 2) - (order[b.variant || "normal"] || 2);
+      return (order[a.variant || "normal"] ?? 2) - (order[b.variant || "normal"] ?? 2);
     });
     sortedDeck.forEach((c) => grid.append(cardTile(c)));
     box.append(grid);
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function renderBattles(battles) {
     const box = el("div", "cr-card");
-    box.append(el("h4", "cr-title", "20 derniers combats"));
+    box.append(el("h3", "cr-title", "20 derniers combats"));
     if (!battles || !battles.length) { box.append(el("p", "cr-message", "Aucun combat.")); return box; }
     
     const list = el("div", "cr-battles");
