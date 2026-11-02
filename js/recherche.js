@@ -39,7 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return img;
   }
 
-  // Accepte le format du Worker (image, evoImage…) ou celui de l'API (iconUrls…)
   function normCard(c) {
     const icons = c.iconUrls || {};
     const maxLevel = c.maxLevel;
@@ -125,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return box;
   }
 
-  /* ---------- 20 derniers combats : tuiles V / D ---------- */
+  /* ---------- 20 derniers combats ---------- */
   function resultOf(b) {
     if (b.result === "win") return "win";
     if (b.result === "loss") return "loss";
@@ -151,50 +150,68 @@ document.addEventListener("DOMContentLoaded", function () {
       box.append(el("p", "cr-message", "Combats indisponibles pour le moment."));
       return box;
     }
+
     const list = battles.slice(0, 20);
     const results = list.map(resultOf);
     const w = results.filter((r) => r === "win").length;
     const l = results.filter((r) => r === "loss").length;
     let streak = 0;
     for (const r of results) { if (r === results[0] && r !== "draw") streak++; else break; }
+
     head.append(el("span", "cr-chip", `${w} V · ${l} D`));
-    if (streak > 1) head.append(el("span", "cr-chip", `${results[0] === "win" ? "🔥 Série de" : "💀 Série de"} ${streak} ${results[0] === "win" ? "victoires" : "défaites"}`));
+    if (streak > 1) {
+      head.append(el("span", "cr-chip",
+        `${results[0] === "win" ? "🔥 Série de" : "💀 Série de"} ${streak} ${results[0] === "win" ? "victoires" : "défaites"}`));
+    }
 
+    // Grille des 20 carrés W/L
     const strip = el("div", "cr-form20");
-    const detail = el("div", "cr-detail");
-    detail.hidden = true;
-    let selected = null;
-
     list.forEach((b, i) => {
       const r = results[i];
-      const btn = el("button", `cr-bt cr-bt-${r}`);
-      btn.type = "button";
-      btn.setAttribute("aria-pressed", "false");
-      btn.setAttribute("aria-label", `${r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité"} ${b.crowns} à ${b.oppCrowns}`);
-      btn.append(el("b", "", r === "win" ? "V" : r === "loss" ? "D" : "="), el("small", "", `${b.crowns ?? 0}-${b.oppCrowns ?? 0}`));
-      btn.addEventListener("click", () => {
-        if (selected) selected.setAttribute("aria-pressed", "false");
-        if (selected === btn) { selected = null; detail.hidden = true; return; }
-        selected = btn;
-        btn.setAttribute("aria-pressed", "true");
-        const label = r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité";
-        const opp = (b.opponents || []).join(" & ") || "Inconnu";
-        detail.replaceChildren(
-          el("h4", "", `${label} ${b.crowns ?? 0} - ${b.oppCrowns ?? 0} 👑`),
-          el("p", "", `Contre ${opp}${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}`)
-        );
-        const deck = el("div", "cr-minideck");
-        (b.cards || []).forEach((c) => { const n = normCard(c); const im = picture(n.image, n.name); im.title = n.name; deck.append(im); });
-        if (deck.children.length) detail.append(deck);
-        detail.hidden = false;
-      });
-      strip.append(btn);
+      const tile = el("div", `cr-bt cr-bt-${r}`);
+      tile.setAttribute("aria-label",
+        `${r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité"} ${b.crowns} à ${b.oppCrowns}`);
+      tile.append(
+        el("b", "", r === "win" ? "V" : r === "loss" ? "D" : "="),
+        el("small", "", `${b.crowns ?? 0}-${b.oppCrowns ?? 0}`)
+      );
+      strip.append(tile);
     });
-    box.append(strip, detail);
+    box.append(strip);
+
+    // Détails de tous les combats, affichés en dessous
+    list.forEach((b, i) => {
+      const r = results[i];
+      const label = r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité";
+      const opp = (b.opponents || []).join(" & ") || "Inconnu";
+
+      const detail = el("div", "cr-battle-detail");
+
+      const badge = el("div", `bd-result ${r}`, r === "win" ? "V" : r === "loss" ? "D" : "=");
+
+      const info = el("div", "bd-info");
+      info.append(
+        el("h4", "", `${label} ${b.crowns ?? 0} - ${b.oppCrowns ?? 0} 👑`),
+        el("p", "", `Contre ${opp}${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}`)
+      );
+
+      const deck = el("div", "cr-minideck");
+      (b.cards || []).forEach((c) => {
+        const n = normCard(c);
+        const im = picture(n.image, n.name);
+        im.title = n.name;
+        deck.append(im);
+      });
+
+      detail.append(badge, info);
+      if (deck.children.length) detail.append(deck);
+      box.append(detail);
+    });
+
     return box;
   }
 
-  /* ---------- toute la collection ---------- */
+  /* ---------- collection complète ---------- */
   const RARITY_ORDER = { champion: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
 
   function renderCollection(p) {
@@ -204,40 +221,80 @@ document.addEventListener("DOMContentLoaded", function () {
     box.append(head);
 
     if (!p.cards || !p.cards.length) {
-      box.append(el("p", "cr-message", "La collection complète n'est pas disponible : le Worker (ou data/player.json) doit envoyer la liste « cards »."));
+      box.append(el("p", "cr-message", "La collection complète n'est pas disponible."));
       return box;
     }
+
     const all = p.cards.map(normCard);
     const maxed = all.filter((c) => c.maxed).length;
-    const avg = all.filter((c) => has(c.level)).reduce((a, c) => a + c.level, 0) / (all.filter((c) => has(c.level)).length || 1);
-    head.append(el("span", "cr-chip", `${all.length} cartes`), el("span", "cr-chip", `${maxed} au niveau max`), el("span", "cr-chip", `Niveau moyen ${avg.toFixed(1)}`));
+    const leveled = all.filter((c) => has(c.level));
+    const avg = leveled.reduce((a, c) => a + c.level, 0) / (leveled.length || 1);
+
+    head.append(
+      el("span", "cr-chip", `${all.length} cartes`),
+      el("span", "cr-chip", `${maxed} au niveau max`),
+      el("span", "cr-chip", `Niveau moyen ${avg.toFixed(1)}`)
+    );
 
     const bar = el("div", "cr-toolbar");
-    const search = el("input"); search.type = "search"; search.placeholder = "Rechercher une carte…"; search.setAttribute("aria-label", "Rechercher une carte");
-    const rarity = el("select"); rarity.setAttribute("aria-label", "Filtrer par rareté");
-    [["", "Toutes raretés"], ["common", "Commune"], ["rare", "Rare"], ["epic", "Épique"], ["legendary", "Légendaire"], ["champion", "Champion"]]
+
+    const search = el("input");
+    search.type = "search";
+    search.placeholder = "Rechercher une carte…";
+    search.setAttribute("aria-label", "Rechercher une carte");
+
+    const rarity = el("select");
+    rarity.setAttribute("aria-label", "Filtrer par rareté");
+    [["", "Toutes raretés"], ["common", "Commune"], ["rare", "Rare"], ["epic", "Épique"],
+     ["legendary", "Légendaire"], ["champion", "Champion"], ["hero", "Héros"]]
       .forEach(([v, t]) => { const o = el("option", "", t); o.value = v; rarity.append(o); });
-    const sort = el("select"); sort.setAttribute("aria-label", "Trier");
-    [["level", "Niveau (haut → bas)"], ["elixir", "Élixir"], ["rarity", "Rareté"], ["name", "Nom"]]
+
+    const sort = el("select");
+    sort.setAttribute("aria-label", "Trier");
+    [["level", "Niveau (haut → bas)"],
+     ["levelAsc", "Niveau (bas → haut)"],
+     ["elixir", "Élixir (croissant)"],
+     ["elixirDesc", "Élixir (décroissant)"],
+     ["rarity", "Rareté"],
+     ["name", "Nom (A → Z)"],
+     ["nameDesc", "Nom (Z → A)"]]
       .forEach(([v, t]) => { const o = el("option", "", t); o.value = v; sort.append(o); });
+
     bar.append(search, rarity, sort);
 
     const grid = el("div", "cr-collgrid");
+
     function draw() {
       const q = search.value.toLowerCase().trim();
-      const list = all.filter((c) => (!q || c.name.toLowerCase().includes(q)) && (!rarity.value || c.rarity === rarity.value));
+      const list = all.filter((c) =>
+        (!q || c.name.toLowerCase().includes(q)) &&
+        (!rarity.value || c.rarity === rarity.value)
+      );
+
       const by = {
-        level: (a, b) => (b.level ?? 0) - (a.level ?? 0) || a.name.localeCompare(b.name),
-        elixir: (a, b) => (a.elixir ?? 0) - (b.elixir ?? 0) || a.name.localeCompare(b.name),
-        rarity: (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9) || (b.level ?? 0) - (a.level ?? 0),
-        name: (a, b) => a.name.localeCompare(b.name),
-      }[sort.value];
+        level:     (a, b) => (b.level ?? 0) - (a.level ?? 0) || a.name.localeCompare(b.name),
+        levelAsc:  (a, b) => (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name),
+        elixir:    (a, b) => (a.elixir ?? 0) - (b.elixir ?? 0) || a.name.localeCompare(b.name),
+        elixirDesc:(a, b) => (b.elixir ?? 0) - (a.elixir ?? 0) || a.name.localeCompare(b.name),
+        rarity:    (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9) || (b.level ?? 0) - (a.level ?? 0),
+        name:      (a, b) => a.name.localeCompare(b.name),
+        nameDesc:  (a, b) => b.name.localeCompare(a.name),
+      }[sort.value] || ((a, b) => 0);
+
       list.sort(by);
-      if (!list.length) { grid.replaceChildren(el("p", "cr-empty", "Aucune carte ne correspond.")); return; }
+
+      if (!list.length) {
+        grid.replaceChildren(el("p", "cr-empty", "Aucune carte ne correspond."));
+        return;
+      }
       grid.replaceChildren(...list.map(tileFromNorm));
     }
-    [search, rarity, sort].forEach((x) => x.addEventListener("input", draw));
+
+    search.addEventListener("input", draw);
+    rarity.addEventListener("change", draw);
+    sort.addEventListener("change", draw);
     draw();
+
     box.append(bar, grid);
     return box;
   }
@@ -246,7 +303,12 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderAll(data) {
     const wrap = el("div");
     const p = data.player;
-    wrap.append(renderHeader(p), renderDeck(p), renderBattles(data.battles ?? p.battles), renderCollection(p));
+    wrap.append(
+      renderHeader(p),
+      renderDeck(p),
+      renderBattles(data.battles ?? p.battles),
+      renderCollection(p)
+    );
     return wrap;
   }
 
@@ -258,7 +320,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return res.json();
   }
 
-  // Secours : data/player.json (mis à jour chaque jour par GitHub Actions)
   async function fetchStatic() {
     const res = await fetch("./data/player.json", { cache: "no-cache" });
     if (!res.ok) throw new Error(`player.json HTTP ${res.status}`);
@@ -274,7 +335,8 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (err) {
       if (err && err.user) return message(err.user);
       console.error("Worker injoignable :", err);
-      if (rawTag.replace("#", "").toLowerCase() !== MON_TAG) return message("Impossible de contacter le serveur (le Worker ne répond pas).");
+      if (rawTag.replace("#", "").toLowerCase() !== MON_TAG)
+        return message("Impossible de contacter le serveur (le Worker ne répond pas).");
       try { data = await fetchStatic(); }
       catch (err2) { console.error("player.json illisible :", err2); return message("Impossible de contacter le serveur."); }
     }
