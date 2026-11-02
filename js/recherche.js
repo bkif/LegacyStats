@@ -1,383 +1,297 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
-  const MON_TAG = "v9jjgll0g";
-  const FALLBACK = "./images/logo_clash_royale.png";
-  const MAX_LEVEL = 16;
+/* ============================================================
+   recherche.js — Recherche de joueur Clash Royale (MH Legacy)
+   - Récupère le profil /players/%23TAG
+   - Récupère les combats /players/%23TAG/battles
+   - Affiche le deck actuel + les 20 derniers combats
+     avec le deck de l'adversaire au clic.
 
-  const form = document.getElementById("search-form");
+   ⚙️  POINT IMPORTANT : l'API officielle refuse les appels
+   directs depuis un navigateur (CORS + token). Il faut un proxy.
+   Adapte PROXY_URL à ton proxy (Cloudflare Worker, Vercel,
+   Netlify, RoyaleAPI, etc.). Les endpoints appelés seront :
+       PROXY_URL + "/players/%23TAG"
+       PROXY_URL + "/players/%23TAG/battles"
+   ============================================================ */
+
+const PROXY_URL = "/api"; // ← change si ton proxy a une autre URL
+
+/* ---------- Helpers ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+
+function normalizeTag(raw) {
+  return String(raw || "")
+    .trim()
+    .toUpperCase()
+    .replace(/^#/, "")
+    .replace(/[^0-9A-Z]/g, "");
+}
+
+async function fetchJSON(path, { timeoutMs = 12000 } = {}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(PROXY_URL + path, {
+      headers: { Accept: "application/json" },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function parseBattleTime(s) {
+  if (!s) return null;
+  const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+}
+
+function fmtDate(d) {
+  if (!d) return "";
+  return d.toLocaleString("fr-CH", {
+    day: "2-digit", month: "2-digit", year: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function rarityClass(r) {
+  return `cr-r-${String(r || "common").toLowerCase()}`;
+}
+
+/* ---------- Rendu des cartes ---------- */
+function cardTile(card, { showMax = false } = {}) {
+  const img  = card.iconUrls?.medium || card.iconUrls?.large || "";
+  const name = card.name || "Carte";
+  const lvl  = card.level ?? card.maxLevel ?? "?";
+  const isMax = showMax && card.maxLevel && card.level >= card.maxLevel;
+  const isEvo = card.evolutionLevel > 0;
+
+  const classes = ["cr-tile", rarityClass(card.rarity)];
+  if (isMax) classes.push("max");
+  if (isEvo) classes.push("cr-v-evo");
+
+  return `<div class="${classes.join(" ")}" title="${esc(name)}">
+    <div class="cr-art">
+      <img src="${esc(img)}" alt="${esc(name)}" loading="lazy">
+    </div>
+    <span class="cr-lv">Niv ${esc(lvl)}</span>
+  </div>`;
+}
+
+function cardSlot(card) {
+  return `<div class="cr-slot">${cardTile(card, { showMax: true })}</div>`;
+}
+
+function deckGrid(cards) {
+  return `<div class="cr-deckgrid">${cards.map(cardSlot).join("")}</div>`;
+}
+
+/* ---------- Profil ---------- */
+function playerCard(p) {
+  const clan    = p.clan ? `${p.clan.name} (${p.clan.tag})` : "Sans clan";
+  const arena   = p.arena?.name || "";
+  const league  = p.currentPathOfLegendSeasonResult?.leagueNumber;
+
+  const stats = [
+    ["Niveau",        p.expLevel,       false],
+    ["Trophées",      p.trophies,       true ],
+    ["Record",        p.bestTrophies,   false],
+    ["Victoires 3 ⭐", p.threeCrownWins, false],
+    ["Parties",       p.totalGames,     false],
+    ["Victoires",     p.wins,           false],
+    ["Défaites",      p.losses,         false],
+  ];
+
+  const statHtml = stats.map(([label, val, hl]) => `
+    <div class="cr-stat${hl ? " hl" : ""}">
+      <span class="cr-stat-value">${esc(val ?? "—")}</span>
+      <span class="cr-stat-label">${label}</span>
+    </div>`).join("");
+
+  return `<section class="cr-card">
+    <div class="cr-head">
+      <div class="cr-lvl">${esc(p.expLevel ?? "?")}</div>
+      <div>
+        <h2 class="cr-name">${esc(p.name)}</h2>
+        <p class="cr-sub">
+          ${esc(p.tag)} · ${esc(clan)}
+          ${arena  ? " · " + esc(arena)  : ""}
+          ${league ? " · Ligue " + esc(league) : ""}
+        </p>
+      </div>
+    </div>
+    <div class="cr-stats">${statHtml}</div>
+  </section>`;
+}
+
+/* ---------- Deck actuel ---------- */
+function currentDeckSection(deck) {
+  if (!Array.isArray(deck) || deck.length === 0) {
+    return `<section class="cr-card">
+      <h2 class="cr-title">Deck actuel</h2>
+      <p class="cr-message" style="margin:0">Deck indisponible.</p>
+    </section>`;
+  }
+  return `<section class="cr-card">
+    <div class="cr-sectionhead">
+      <h2 class="cr-title">Deck actuel</h2>
+      <span class="cr-chip">🃏 ${deck.length} cartes</span>
+    </div>
+    ${deckGrid(deck)}
+  </section>`;
+}
+
+/* ---------- Combats ---------- */
+function outcomeOf(b) {
+  const my  = b.team?.[0];
+  const opp = b.opponent?.[0];
+  if (!my || !opp) return null;
+  if (my.crowns > opp.crowns) return "win";
+  if (my.crowns < opp.crowns) return "loss";
+  return "draw";
+}
+
+function battleHistorySection(battles) {
+  const list = (battles || [])
+    .filter(b => b.team?.[0] && b.opponent?.[0])
+    .slice(0, 20);
+
+  if (list.length === 0) {
+    return `<section class="cr-card">
+      <h2 class="cr-title">20 derniers combats</h2>
+      <p class="cr-message" style="margin:0">Aucun combat récent trouvé.</p>
+    </section>`;
+  }
+
+  const buttons = list.map((b, i) => {
+    const out = outcomeOf(b);
+    const my  = b.team[0];
+    const opp = b.opponent[0];
+    const letter = out === "win" ? "V" : out === "loss" ? "D" : "N";
+    return `<button type="button" class="cr-bt cr-bt-${out}"
+              data-battle="${i}" aria-pressed="false"
+              aria-label="Combat ${i + 1} : ${letter}">
+      <b>${letter}</b>
+      <small>${my.crowns}–${opp.crowns}</small>
+    </button>`;
+  }).join("");
+
+  return `<section class="cr-card">
+    <div class="cr-sectionhead">
+      <h2 class="cr-title">20 derniers combats</h2>
+      <span class="cr-chip">${list.length} parties</span>
+    </div>
+    <div class="cr-form20">${buttons}</div>
+    <div class="cr-detail" id="battle-detail" hidden></div>
+  </section>`;
+}
+
+function renderBattleDetail(b) {
+  const my  = b.team[0];
+  const opp = b.opponent[0];
+  const out = outcomeOf(b);
+  const verb = out === "win" ? "Victoire" : out === "loss" ? "Défaite" : "Match nul";
+  const date = fmtDate(parseBattleTime(b.battleTime));
+  const mode = b.gameMode?.name || "";
+  const arena = b.arena?.name || "";
+
+  const oppCards = (opp.cards || []).map(c => `
+    <img src="${esc(c.iconUrls?.medium || "")}" alt="${esc(c.name)}"
+         title="${esc(c.name)}" loading="lazy">
+  `).join("");
+
+  return `<h4>${verb} contre ${esc(opp.name)}</h4>
+    <p>
+      ${esc(opp.tag)} · ${my.crowns}–${opp.crowns}
+      ${mode  ? " · " + esc(mode)  : ""}
+      ${arena ? " · " + esc(arena) : ""}
+      ${date  ? " · " + esc(date)  : ""}
+    </p>
+    <div class="cr-minideck">${oppCards}</div>`;
+}
+
+/* ---------- Rendu global ---------- */
+function render(player, battles) {
+  const result = document.getElementById("search-result");
+  if (!result) return;
+
+  result.innerHTML = `
+    ${playerCard(player)}
+    ${currentDeckSection(player.currentDeck || [])}
+    ${battleHistorySection(battles)}
+  `;
+
+  const detail  = document.getElementById("battle-detail");
+  const buttons = result.querySelectorAll(".cr-bt");
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const b = battles[+btn.dataset.battle];
+      if (!b) return;
+      buttons.forEach(x => x.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      detail.innerHTML = renderBattleDetail(b);
+      detail.hidden = false;
+    });
+  });
+}
+
+/* ---------- Recherche ---------- */
+async function doSearch(tag, { fromUrl = false } = {}) {
+  const result = document.getElementById("search-result");
+  if (!result) return;
+
+  result.innerHTML = `<p class="cr-message">Recherche de <strong>#${esc(tag)}</strong>…</p>`;
+
+  try {
+    const [player, battles] = await Promise.all([
+      fetchJSON(`/players/%23${encodeURIComponent(tag)}`),
+      fetchJSON(`/players/%23${encodeURIComponent(tag)}/battles`).catch(() => []),
+    ]);
+    render(player, battles);
+
+    if (!fromUrl) {
+      const url = new URL(location.href);
+      url.searchParams.set("tag", tag);
+      history.replaceState(null, "", url);
+    }
+  } catch (err) {
+    console.error("[recherche]", err);
+    result.innerHTML = `<p class="cr-message">
+      Impossible de charger <strong>#${esc(tag)}</strong>.<br>
+      Vérifie le tag, le proxy API (<code>${esc(PROXY_URL)}</code>)
+      et la console pour plus de détails.
+    </p>`;
+  }
+}
+
+/* ---------- Init ---------- */
+(function init() {
+  const form  = document.getElementById("search-form");
   const input = document.getElementById("tag-input");
-  const out = document.getElementById("search-result");
-  if (!form || !input || !out) return;
+  if (!form || !input) return;
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const tag = input.value.trim();
-    if (tag) search(tag);
+    const tag = normalizeTag(input.value);
+    if (!tag) return;
+    input.value = "#" + tag;
+    doSearch(tag);
   });
 
-  const num = (n) => Number(n).toLocaleString("fr-CH");
-  const has = (v) => v !== undefined && v !== null && v !== "";
-
-  function el(tag, className, text) {
-    const e = document.createElement(tag);
-    if (className) e.className = className;
-    if (text !== undefined) e.textContent = text;
-    return e;
+  // Support ?tag=XXXX dans l'URL (utile pour partager un profil)
+  const tagFromUrl = normalizeTag(new URLSearchParams(location.search).get("tag"));
+  if (tagFromUrl) {
+    input.value = "#" + tagFromUrl;
+    doSearch(tagFromUrl, { fromUrl: true });
   }
-
-  function message(text) {
-    out.replaceChildren(el("p", "cr-message", text));
-  }
-
-  function picture(src, alt) {
-    const img = document.createElement("img");
-    img.src = src || FALLBACK;
-    img.alt = alt || "";
-    img.loading = "lazy";
-    img.onerror = function () { this.onerror = null; this.src = FALLBACK; };
-    return img;
-  }
-
-  function normCard(c) {
-    const icons = c.iconUrls || {};
-    const maxLevel = c.maxLevel;
-    const level = c.displayLevel ?? (maxLevel && has(c.level) ? c.level + (MAX_LEVEL - maxLevel) : c.level);
-    const variant = c.variant || (c.evolutionLevel > 0 ? "evo" : "normal");
-    return {
-      name: c.name || "?",
-      rarity: c.rarity || "common",
-      elixir: c.elixir ?? c.elixirCost,
-      level,
-      maxed: has(maxLevel) && has(c.level) ? c.level >= maxLevel : false,
-      variant,
-      image: variant === "evo" && (c.evoImage || icons.evolutionMedium) ? (c.evoImage || icons.evolutionMedium)
-           : variant === "hero" && (c.heroImage || icons.heroMedium) ? (c.heroImage || icons.heroMedium)
-           : (c.image || icons.medium),
-    };
-  }
-
-  function tileFromNorm(c) {
-    const slot = el("div", "cr-slot");
-    slot.title = c.name;
-    const tile = el("div", `cr-tile cr-r-${c.rarity} cr-v-${c.variant}${c.maxed ? " max" : ""}`);
-    const art = el("div", "cr-art");
-    art.append(picture(c.image, c.name));
-    tile.append(art);
-    if (typeof c.elixir === "number") tile.append(el("span", "cr-el", String(c.elixir)));
-    if (has(c.level)) tile.append(el("div", "cr-lv", c.maxed ? "MAX" : `Niv. ${c.level}`));
-    slot.append(tile);
-    return slot;
-  }
-
-  function renderHeader(p) {
-    const box = el("div", "cr-card");
-    const head = el("div", "cr-head");
-    const text = el("div");
-    text.append(el("h3", "cr-name", p.name), el("p", "cr-sub", [p.tag, p.clan, p.arena].filter(has).join(" · ")));
-    head.append(el("div", "cr-lvl", String(p.level ?? "?")), text);
-    box.append(head);
-
-    const total = (p.wins ?? 0) + (p.losses ?? 0);
-    const rate = total > 0 ? ((p.wins / total) * 100).toFixed(1) + " %" : null;
-    const defs = [
-      ["Trophées", p.trophies, true], ["Record", p.bestTrophies, true],
-      ["Victoires", p.wins], ["Défaites", p.losses], ["Taux de victoire", rate],
-      ["3 couronnes", p.threeCrownWins], ["Combats", p.battleCount],
-      ["Dons", p.totalDonations ?? p.donations], ["Dons reçus", p.donationsReceived],
-      ["Victoires de guerre", p.warDayWins], ["Trophées de guerre", p.clanWarTrophies],
-      ["Max victoires défi", p.challengeMaxWins], ["Cartes gagnées en défi", p.challengeCardsWon],
-      ["Rôle dans le clan", p.role], ["Carte favorite", p.favouriteCard],
-    ];
-    const grid = el("div", "cr-stats");
-    defs.forEach(([label, value, hl]) => {
-      if (!has(value)) return;
-      const s = el("div", "cr-stat" + (hl ? " hl" : ""));
-      s.append(
-        el("span", "cr-stat-value", typeof value === "number" ? num(value) : String(value)),
-        el("span", "cr-stat-label", label)
-      );
-      grid.append(s);
-    });
-    box.append(grid);
-    return box;
-  }
-
-  function renderDeck(p) {
-    const box = el("div", "cr-card");
-    const head = el("div", "cr-sectionhead");
-    head.append(el("h3", "cr-title", "Deck actuel"));
-    const deck = (p.deck || []).map(normCard);
-    const elixirs = deck.map((c) => c.elixir).filter((x) => typeof x === "number");
-    if (elixirs.length) {
-      const avg = (elixirs.reduce((a, b) => a + b, 0) / elixirs.length).toFixed(1);
-      head.append(el("span", "cr-chip", `💧 Élixir moyen : ${avg}`));
-    }
-    box.append(head);
-
-    const order = { evo: 0, hero: 1, normal: 2 };
-    const sorted = [...(p.deck || [])].sort((a, b) => (order[normCard(a).variant] ?? 2) - (order[normCard(b).variant] ?? 2));
-    const grid = el("div", "cr-deckgrid");
-    sorted.forEach((c) => grid.append(tileFromNorm(normCard(c))));
-    box.append(grid);
-    return box;
-  }
-
-  function resultOf(b) {
-    if (b.result === "win") return "win";
-    if (b.result === "loss") return "loss";
-    if (b.crowns > b.oppCrowns) return "win";
-    if (b.crowns < b.oppCrowns) return "loss";
-    return "draw";
-  }
-
-  function fmtDate(t) {
-    if (!t) return "";
-    const d = new Date(t);
-    if (isNaN(d)) return "";
-    return d.toLocaleString("fr-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-  }
-
-  function miniCardEl(raw) {
-    const c = normCard(raw);
-    const wrap = el("div", "bd-card");
-    wrap.title = `${c.name}${has(c.level) ? " · Niv. " + c.level : ""}${typeof c.elixir === "number" ? " · " + c.elixir + " élixir" : ""}`;
-    wrap.append(picture(c.image, c.name));
-    wrap.append(el("span", "bd-card-name", c.name));
-    const meta = [];
-    if (has(c.level)) meta.push(`Niv. ${c.level}`);
-    if (typeof c.elixir === "number") meta.push(`💧${c.elixir}`);
-    if (meta.length) wrap.append(el("span", "bd-card-meta", meta.join(" · ")));
-    return wrap;
-  }
-
-  function renderBattles(battles) {
-    const box = el("div", "cr-card");
-    const head = el("div", "cr-sectionhead");
-    head.append(el("h3", "cr-title", "20 derniers combats"));
-    box.append(head);
-
-    if (!battles || !battles.length) {
-      box.append(el("p", "cr-message", "Combats indisponibles."));
-      return box;
-    }
-
-    const list = battles.slice(0, 20);
-    const results = list.map(resultOf);
-    const w = results.filter((r) => r === "win").length;
-    const l = results.filter((r) => r === "loss").length;
-    let streak = 0;
-    for (const r of results) { if (r === results[0] && r !== "draw") streak++; else break; }
-
-    head.append(el("span", "cr-chip", `${w} V · ${l} D`));
-    if (streak > 1) {
-      head.append(el("span", "cr-chip",
-        `${results[0] === "win" ? "🔥 Série de" : "💀 Série de"} ${streak} ${results[0] === "win" ? "victoires" : "défaites"}`));
-    }
-
-    const strip = el("div", "cr-form20");
-    list.forEach((b, i) => {
-      const r = results[i];
-      const perfect = r === "win" && b.crowns === 3 && b.oppCrowns === 0;
-      const tile = el("div", `cr-bt cr-bt-${r}${perfect ? " cr-bt-perfect" : ""}`);
-      tile.append(
-        el("b", "", r === "win" ? "V" : r === "loss" ? "D" : "="),
-        el("small", "", `${b.crowns ?? 0}-${b.oppCrowns ?? 0}`)
-      );
-      strip.append(tile);
-    });
-    box.append(strip);
-
-    // Détails de chaque combat
-    list.forEach((b, i) => {
-      const r = results[i];
-      const label = r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité";
-      const opp = (b.opponents || []).join(" & ") || "Inconnu";
-      const perfect = r === "win" && b.crowns === 3 && b.oppCrowns === 0;
-
-      const detail = el("div", "cr-battle-detail");
-
-      const bdHead = el("div", "bd-head");
-      const badge = el("span", `bd-result ${r}${perfect ? " perfect" : ""}`, r === "win" ? "V" : r === "loss" ? "D" : "=");
-      const bdInfo = el("div", "bd-info");
-      bdInfo.append(
-        el("h4", "", `${label} ${b.crowns ?? 0} - ${b.oppCrowns ?? 0} 👑${perfect ? " · PARFAIT" : ""}`),
-        el("p", "", `Contre ${opp}${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}`)
-      );
-      bdHead.append(badge, bdInfo);
-      detail.append(bdHead);
-
-      // Ton deck
-      const myDeck = el("div", "bd-deck");
-      myDeck.append(el("h5", "", `TON DECK (${(b.cards || []).length})`));
-      const myCards = el("div", "bd-cards");
-      (b.cards || []).forEach((c) => myCards.append(miniCardEl(c)));
-      if (!myCards.children.length) myCards.append(el("p", "cr-message", "Indisponible."));
-      myDeck.append(myCards);
-      detail.append(myDeck);
-
-      // Deck adverse
-      const oppCards = b.oppCards || [];
-      const oppDeck = el("div", "bd-deck");
-      oppDeck.append(el("h5", "", `DECK ADVERSE (${oppCards.length})`));
-      const oppGrid = el("div", "bd-cards");
-      if (oppCards.length) {
-        oppCards.forEach((c) => oppGrid.append(miniCardEl(c)));
-      } else {
-        oppGrid.append(el("p", "cr-message", "L'API n'a pas renvoyé le deck adverse pour ce combat (souvent le cas sur les combats très anciens ou les modes spéciaux)."));
-      }
-      oppDeck.append(oppGrid);
-      detail.append(oppDeck);
-
-      box.append(detail);
-    });
-
-    return box;
-  }
-
-  const RARITY_ORDER = { champion: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
-
-  function renderCollection(p) {
-    const box = el("div", "cr-card");
-    const head = el("div", "cr-sectionhead");
-    head.append(el("h3", "cr-title", "Ma collection"));
-    box.append(head);
-
-    if (!p.cards || !p.cards.length) {
-      box.append(el("p", "cr-message", "Aucune carte reçue. Vérifie le Worker."));
-      return box;
-    }
-
-    const all = p.cards.map(normCard);
-    const maxed = all.filter((c) => c.maxed).length;
-    const leveled = all.filter((c) => has(c.level));
-    const avg = leveled.length ? (leveled.reduce((a, c) => a + c.level, 0) / leveled.length).toFixed(1) : "—";
-
-    const chips = el("div", "cr-chips");
-    chips.append(
-      el("span", "cr-chip", `${all.length} cartes`),
-      el("span", "cr-chip", `${maxed} au niveau max`),
-      el("span", "cr-chip", `Niveau moyen ${avg}`)
-    );
-    head.append(chips);
-
-    const bar = el("div", "cr-toolbar");
-    const search = el("input");
-    search.type = "search";
-    search.placeholder = "Rechercher une carte…";
-    search.setAttribute("aria-label", "Rechercher une carte");
-
-    const rarity = el("select");
-    rarity.setAttribute("aria-label", "Filtrer par rareté");
-    [["", "Toutes raretés"], ["common", "Commune"], ["rare", "Rare"], ["epic", "Épique"],
-     ["legendary", "Légendaire"], ["champion", "Champion"], ["hero", "Héros"]]
-      .forEach(([v, t]) => { const o = el("option", "", t); o.value = v; rarity.append(o); });
-
-    const sort = el("select");
-    sort.setAttribute("aria-label", "Trier");
-    [["level", "Niveau (haut → bas)"],
-     ["levelAsc", "Niveau (bas → haut)"],
-     ["elixir", "Élixir (croissant)"],
-     ["elixirDesc", "Élixir (décroissant)"],
-     ["rarity", "Rareté"],
-     ["name", "Nom (A → Z)"],
-     ["nameDesc", "Nom (Z → A)"]]
-      .forEach(([v, t]) => { const o = el("option", "", t); o.value = v; sort.append(o); });
-
-    bar.append(search, rarity, sort);
-    const grid = el("div", "cr-collgrid");
-
-    function draw() {
-      const q = search.value.toLowerCase().trim();
-      const list = all.filter((c) =>
-        (!q || c.name.toLowerCase().includes(q)) &&
-        (!rarity.value || c.rarity === rarity.value)
-      );
-
-      const by = {
-        level:      (a, b) => (b.level ?? 0) - (a.level ?? 0) || a.name.localeCompare(b.name),
-        levelAsc:   (a, b) => (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name),
-        elixir:     (a, b) => (a.elixir ?? 0) - (b.elixir ?? 0) || a.name.localeCompare(b.name),
-        elixirDesc: (a, b) => (b.elixir ?? 0) - (a.elixir ?? 0) || a.name.localeCompare(b.name),
-        rarity:     (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9) || (b.level ?? 0) - (a.level ?? 0),
-        name:       (a, b) => a.name.localeCompare(b.name),
-        nameDesc:   (a, b) => b.name.localeCompare(a.name),
-      }[sort.value] || ((a, b) => 0);
-
-      list.sort(by);
-      if (!list.length) {
-        grid.replaceChildren(el("p", "cr-empty", "Aucune carte ne correspond."));
-        return;
-      }
-      grid.replaceChildren(...list.map(tileFromNorm));
-    }
-
-    search.addEventListener("input", draw);
-    rarity.addEventListener("change", draw);
-    sort.addEventListener("change", draw);
-    draw();
-
-    box.append(bar, grid);
-    return box;
-  }
-
-  function renderAll(data) {
-    const wrap = el("div");
-    const p = data.player || {};
-    const battles = data.battles ?? p.battles ?? [];
-    const safe = (fn, label) => {
-      try { return fn(); } catch (e) {
-        console.error(`Erreur section ${label}:`, e);
-        const box = el("div", "cr-card");
-        box.append(el("p", "cr-message", `Erreur section ${label} (voir F12).`));
-        return box;
-      }
-    };
-
-    wrap.append(
-      safe(() => renderHeader(p), "profil"),
-      safe(() => renderDeck(p), "deck"),
-      safe(() => renderBattles(battles), "combats"),
-      safe(() => renderCollection(p), "collection")
-    );
-    return wrap;
-  }
-
-  async function fetchLive(rawTag) {
-    const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(rawTag)}`);
-    if (res.status === 404) throw { user: "Aucun joueur avec ce tag." };
-    if (res.status === 400) throw { user: "Tag invalide." };
-    if (!res.ok) throw new Error(`Worker HTTP ${res.status}`);
-    return res.json();
-  }
-
-  async function fetchStatic() {
-    const res = await fetch("./data/player.json", { cache: "no-cache" });
-    if (!res.ok) throw new Error(`player.json HTTP ${res.status}`);
-    const player = await res.json();
-    return { player, battles: player.battles || [], _static: true };
-  }
-
-  async function search(rawTag) {
-    message("Recherche en cours...");
-    let data;
-    try {
-      data = await fetchLive(rawTag);
-    } catch (err) {
-      if (err && err.user) return message(err.user);
-      if (rawTag.replace("#", "").toLowerCase() !== MON_TAG)
-        return message("Impossible de contacter le serveur.");
-      try { data = await fetchStatic(); }
-      catch (err2) { return message("Impossible de contacter le serveur."); }
-    }
-    try {
-      const view = renderAll(data);
-      out.replaceChildren(view);
-      if (data._static) out.prepend(el("p", "cr-message", "Serveur en direct indisponible : données enregistrées."));
-    } catch (err) {
-      message("Format de données invalide.");
-    }
-  }
-
-  input.value = "#" + MON_TAG;
-  search(MON_TAG);
-});
+})();
