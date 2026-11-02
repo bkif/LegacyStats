@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (tag) search(tag);
   });
 
-  /* ---------- outils ---------- */
   const num = (n) => Number(n).toLocaleString("fr-CH");
   const has = (v) => v !== undefined && v !== null && v !== "";
 
@@ -49,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
       rarity: c.rarity || "common",
       elixir: c.elixir ?? c.elixirCost,
       level,
-      maxed: has(maxLevel) ? c.level >= maxLevel : false,
+      maxed: has(maxLevel) && has(c.level) ? c.level >= maxLevel : false,
       variant,
       image: variant === "evo" && (c.evoImage || icons.evolutionMedium) ? (c.evoImage || icons.evolutionMedium)
            : variant === "hero" && (c.heroImage || icons.heroMedium) ? (c.heroImage || icons.heroMedium)
@@ -57,16 +56,14 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
-  function cardTile(raw) { return tileFromNorm(normCard(raw)); }
-
   function tileFromNorm(c) {
     const slot = el("div", "cr-slot");
     slot.title = c.name;
     const tile = el("div", `cr-tile cr-r-${c.rarity} cr-v-${c.variant}${c.maxed ? " max" : ""}`);
-    if (typeof c.elixir === "number") tile.append(el("span", "cr-el", String(c.elixir)));
     const art = el("div", "cr-art");
     art.append(picture(c.image, c.name));
     tile.append(art);
+    if (typeof c.elixir === "number") tile.append(el("span", "cr-el", String(c.elixir)));
     if (has(c.level)) tile.append(el("div", "cr-lv", c.maxed ? "MAX" : `Niv. ${c.level}`));
     slot.append(tile);
     return slot;
@@ -111,7 +108,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const box = el("div", "cr-card");
     const head = el("div", "cr-sectionhead");
     head.append(el("h3", "cr-title", "Deck actuel"));
-
     const deck = (p.deck || []).map(normCard);
     const elixirs = deck.map((c) => c.elixir).filter((x) => typeof x === "number");
     if (elixirs.length) {
@@ -123,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const order = { evo: 0, hero: 1, normal: 2 };
     const sorted = [...(p.deck || [])].sort((a, b) => (order[normCard(a).variant] ?? 2) - (order[normCard(b).variant] ?? 2));
     const grid = el("div", "cr-deckgrid");
-    sorted.forEach((c) => grid.append(cardTile(c)));
+    sorted.forEach((c) => grid.append(tileFromNorm(normCard(c))));
     box.append(grid);
     return box;
   }
@@ -147,17 +143,13 @@ document.addEventListener("DOMContentLoaded", function () {
   function miniCardEl(raw) {
     const c = normCard(raw);
     const wrap = el("div", "bd-card");
-    wrap.title = c.name;
+    wrap.title = `${c.name}${has(c.level) ? " · Niv. " + c.level : ""}${typeof c.elixir === "number" ? " · " + c.elixir + " élixir" : ""}`;
     wrap.append(picture(c.image, c.name));
-
-    const name = el("span", "bd-card-name", c.name);
-    wrap.append(name);
-
-    const metaParts = [];
-    if (has(c.level)) metaParts.push(`Niv. ${c.level}`);
-    if (typeof c.elixir === "number") metaParts.push(`💧${c.elixir}`);
-    if (metaParts.length) wrap.append(el("span", "bd-card-meta", metaParts.join(" · ")));
-
+    wrap.append(el("span", "bd-card-name", c.name));
+    const meta = [];
+    if (has(c.level)) meta.push(`Niv. ${c.level}`);
+    if (typeof c.elixir === "number") meta.push(`💧${c.elixir}`);
+    if (meta.length) wrap.append(el("span", "bd-card-meta", meta.join(" · ")));
     return wrap;
   }
 
@@ -168,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
     box.append(head);
 
     if (!battles || !battles.length) {
-      box.append(el("p", "cr-message", "Combats indisponibles pour le moment."));
+      box.append(el("p", "cr-message", "Combats indisponibles."));
       return box;
     }
 
@@ -189,7 +181,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const strip = el("div", "cr-form20");
     list.forEach((b, i) => {
       const r = results[i];
-      const tile = el("div", `cr-bt cr-bt-${r}`);
+      const perfect = r === "win" && b.crowns === 3 && b.oppCrowns === 0;
+      const tile = el("div", `cr-bt cr-bt-${r}${perfect ? " cr-bt-perfect" : ""}`);
       tile.append(
         el("b", "", r === "win" ? "V" : r === "loss" ? "D" : "="),
         el("small", "", `${b.crowns ?? 0}-${b.oppCrowns ?? 0}`)
@@ -198,96 +191,86 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     box.append(strip);
 
-    // Détails de tous les combats
+    // Détails
     list.forEach((b, i) => {
       const r = results[i];
       const label = r === "win" ? "Victoire" : r === "loss" ? "Défaite" : "Égalité";
       const opp = (b.opponents || []).join(" & ") || "Inconnu";
+      const perfect = r === "win" && b.crowns === 3 && b.oppCrowns === 0;
 
       const detail = el("div", "cr-battle-detail");
 
-      // En-tête du combat
       const bdHead = el("div", "bd-head");
-      const resultBadge = el("span", `bd-result ${r}`, r === "win" ? "V" : r === "loss" ? "D" : "=");
+      const badge = el("span", `bd-result ${r}${perfect ? " perfect" : ""}`, r === "win" ? "V" : r === "loss" ? "D" : "=");
       const bdInfo = el("div", "bd-info");
       bdInfo.append(
-        el("h4", "", `${label} ${b.crowns ?? 0} - ${b.oppCrowns ?? 0} 👑`),
+        el("h4", "", `${label} ${b.crowns ?? 0} - ${b.oppCrowns ?? 0} 👑${perfect ? " · PARFAIT" : ""}`),
         el("p", "", `Contre ${opp}${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}`)
       );
-      bdHead.append(resultBadge, bdInfo);
+      bdHead.append(badge, bdInfo);
       detail.append(bdHead);
 
-      // Deux decks côte à côte
-      const decksWrap = el("div", "bd-decks");
-
-      // Mon deck
+      // Ton deck
       const myDeck = el("div", "bd-deck");
-      myDeck.append(el("h5", "", `Ton deck (${(b.cards || []).length} cartes)`));
+      myDeck.append(el("h5", "", `Ton deck (${(b.cards || []).length})`));
       const myCards = el("div", "bd-cards");
       (b.cards || []).forEach((c) => myCards.append(miniCardEl(c)));
       if (!myCards.children.length) myCards.append(el("p", "cr-message", "Deck indisponible."));
       myDeck.append(myCards);
-      decksWrap.append(myDeck);
+      detail.append(myDeck);
 
-      // Deck adverse
-      if (b.oppCards && b.oppCards.length) {
-        const oppDeck = el("div", "bd-deck");
-        oppDeck.append(el("h5", "", `Deck adverse (${b.oppCards.length} cartes)`));
-        const oppCards = el("div", "bd-cards");
-        b.oppCards.forEach((c) => oppCards.append(miniCardEl(c)));
-        oppDeck.append(oppCards);
-        decksWrap.append(oppDeck);
+      // Deck adverse — extraction défensive
+      const oppCards = b.oppCards || b.opponentCards
+        || (Array.isArray(b.opponent) && b.opponent[0]?.cards)
+        || [];
+      const oppDeck = el("div", "bd-deck");
+      oppDeck.append(el("h5", "", `Deck adverse (${oppCards.length})`));
+      const oppGrid = el("div", "bd-cards");
+      if (oppCards.length) {
+        oppCards.forEach((c) => oppGrid.append(miniCardEl(c)));
+      } else {
+        oppGrid.append(el("p", "cr-message", "Deck adverse non fourni par le Worker → redéploie-le avec oppCards."));
       }
+      oppDeck.append(oppGrid);
+      detail.append(oppDeck);
 
-      detail.append(decksWrap);
       box.append(detail);
     });
 
     return box;
   }
 
-  /* ---------- collection (derrière un bouton) ---------- */
+  /* ---------- collection TOUJOURS VISIBLE ---------- */
   const RARITY_ORDER = { champion: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
 
   function renderCollection(p) {
     const box = el("div", "cr-card");
     const head = el("div", "cr-sectionhead");
-    head.append(el("h3", "cr-title", "Toutes mes cartes"));
+    head.append(el("h3", "cr-title", "Ma collection"));
     box.append(head);
 
     if (!p.cards || !p.cards.length) {
-      box.append(el("p", "cr-message", "La collection complète n'est pas disponible."));
+      box.append(el("p", "cr-message",
+        "Aucune carte reçue. Le Worker doit renvoyer player.cards (redéploie avec wrangler deploy)."));
       return box;
     }
 
     const all = p.cards.map(normCard);
     const maxed = all.filter((c) => c.maxed).length;
     const leveled = all.filter((c) => has(c.level));
-    const avg = leveled.reduce((a, c) => a + c.level, 0) / (leveled.length || 1);
+    const avg = leveled.length
+      ? (leveled.reduce((a, c) => a + c.level, 0) / leveled.length).toFixed(1)
+      : "—";
 
-    // Chips info
     const chips = el("div", "cr-chips");
     chips.append(
       el("span", "cr-chip", `${all.length} cartes`),
       el("span", "cr-chip", `${maxed} au niveau max`),
-      el("span", "cr-chip", `Niveau moyen ${avg.toFixed(1)}`)
+      el("span", "cr-chip", `Niveau moyen ${avg}`)
     );
     head.append(chips);
 
-    // Bouton toggle
-    const toggle = el("button", "btn", `Voir les ${all.length} cartes`);
-    toggle.type = "button";
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.setAttribute("aria-controls", "collection-panel");
-    box.append(toggle);
-
-    // Panneau caché
-    const panel = el("div");
-    panel.id = "collection-panel";
-    panel.hidden = true;
-
     const bar = el("div", "cr-toolbar");
-
     const search = el("input");
     search.type = "search";
     search.placeholder = "Rechercher une carte…";
@@ -343,30 +326,33 @@ document.addEventListener("DOMContentLoaded", function () {
     search.addEventListener("input", draw);
     rarity.addEventListener("change", draw);
     sort.addEventListener("change", draw);
+    draw();
 
-    let drawn = false;
-    toggle.addEventListener("click", () => {
-      const wasHidden = panel.hidden;
-      panel.hidden = !wasHidden;
-      toggle.setAttribute("aria-expanded", String(wasHidden));
-      toggle.textContent = wasHidden ? "Masquer les cartes" : `Voir les ${all.length} cartes`;
-      if (wasHidden && !drawn) { draw(); drawn = true; }
-    });
-
-    panel.append(bar, grid);
-    box.append(panel);
+    box.append(bar, grid);
     return box;
   }
 
-  /* ---------- assemblage ---------- */
+  /* ---------- assemblage robuste ---------- */
   function renderAll(data) {
     const wrap = el("div");
-    const p = data.player;
+    const p = data.player || {};
+    const battles = data.battles ?? p.battles ?? [];
+
+    const safe = (fn, label) => {
+      try { return fn(); }
+      catch (e) {
+        console.error(`Erreur section ${label}:`, e);
+        const box = el("div", "cr-card");
+        box.append(el("p", "cr-message", `Erreur section ${label} (voir F12).`));
+        return box;
+      }
+    };
+
     wrap.append(
-      renderHeader(p),
-      renderDeck(p),
-      renderBattles(data.battles ?? p.battles),
-      renderCollection(p)
+      safe(() => renderHeader(p), "profil"),
+      safe(() => renderDeck(p), "deck"),
+      safe(() => renderBattles(battles), "combats"),
+      safe(() => renderCollection(p), "collection")
     );
     return wrap;
   }
@@ -395,17 +381,17 @@ document.addEventListener("DOMContentLoaded", function () {
       if (err && err.user) return message(err.user);
       console.error("Worker injoignable :", err);
       if (rawTag.replace("#", "").toLowerCase() !== MON_TAG)
-        return message("Impossible de contacter le serveur.");
+        return message("Impossible de contacter le serveur (Worker injoignable).");
       try { data = await fetchStatic(); }
       catch (err2) { console.error("player.json illisible :", err2); return message("Impossible de contacter le serveur."); }
     }
     try {
       const view = renderAll(data);
       out.replaceChildren(view);
-      if (data._static) out.prepend(el("p", "cr-message", "Serveur en direct indisponible : données enregistrées affichées."));
+      if (data._static) out.prepend(el("p", "cr-message", "Serveur en direct indisponible : données enregistrées."));
     } catch (err) {
-      console.error("Erreur d'affichage :", err, data);
-      message("Les données reçues ne sont pas dans le bon format.");
+      console.error("Erreur globale :", err, data);
+      message("Les données reçues ne sont pas dans le bon format (voir F12).");
     }
   }
 

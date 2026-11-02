@@ -76,3 +76,18 @@ const isoTime = (t) => (t ? t.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{
   fs.mkdirSync("data", { recursive: true });
   fs.writeFileSync("data/player.json", JSON.stringify(player, null, 2));
 })();
+const battles = log.slice(0, 20).map((b) => {
+  const me = b.team?.[0] ?? {};
+  const opp = b.opponent?.[0] ?? {};
+  const crowns = me.crowns ?? 0;
+  const oppCrowns = opp.crowns ?? 0;
+  return {
+    result: crowns > oppCrowns ? "win" : crowns < oppCrowns ? "loss" : "draw",
+    crowns,
+    oppCrowns,
+    time: isoTime(b.battleTime),
+    opponents: (b.opponent || []).map((o) => o.name),
+    cards: (me.cards || []).map(mapCard),
+    oppCards: (opp.cards || []).map(mapCard),
+  };
+});
