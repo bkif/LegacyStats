@@ -137,17 +137,26 @@ document.addEventListener("DOMContentLoaded", function () {
   async function search(tag) {
     out.innerHTML = `<p class="cr-message">Recherche en cours...</p>`;
     try {
-      const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(tag)}`);
-      if (!res.ok) throw new Error(res.status === 404 ? "Joueur introuvable." : "Erreur serveur.");
-      
+      const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(tag)}`, { mode: "cors" });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = res.status === 404 ? "Joueur introuvable." : "Erreur serveur.";
+        try {
+          const json = JSON.parse(text);
+          if (json?.error) msg = json.error === "api" ? "Le proxy API est indisponible pour le moment." : json.error;
+        } catch {}
+        throw new Error(msg);
+      }
+
       const data = await res.json();
-      
-      // 🛡️ Sécurité si l'API n'a pas renvoyé de combats
       if (!data.battles) data.battles = [];
-      
       render(data.player, data.battles);
     } catch (e) {
-      out.innerHTML = `<p class="cr-message">${esc(e.message)}</p>`;
+      const reason = e?.message || "Erreur inconnue.";
+      out.innerHTML = `<p class="cr-message">
+        Impossible de charger les données.<br>
+        <small>${esc(reason)}<br>Vérifie que le worker accepte localhost et GitHub Pages (CORS).</small>
+      </p>`;
     }
   }
 

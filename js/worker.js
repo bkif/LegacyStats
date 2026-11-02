@@ -1,5 +1,16 @@
 const API = "https://proxy.royaleapi.dev/v1";
-const CORS = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json; charset=utf-8" };
+
+function corsHeaders(request) {
+  const origin = request.headers.get("Origin") || "";
+  const allowed = origin && /(localhost|127\.0\.0\.1|bkif\.github\.io|github\.io)/.test(origin) ? origin : "*";
+
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Content-Type": "application/json; charset=utf-8",
+  };
+}
 
 const mapCard = (c) => ({
   name: c.name,
@@ -19,8 +30,10 @@ const isoTime = (t) =>
 
 export default {
   async fetch(request, env) {
+    const CORS = corsHeaders(request);
+
     if (request.method === "OPTIONS")
-      return new Response(null, { headers: { ...CORS, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+      return new Response(null, { headers: CORS });
 
     const url = new URL(request.url);
     const raw = (url.searchParams.get("tag") || "").replace(/^#/, "").toUpperCase();
