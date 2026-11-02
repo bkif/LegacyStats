@@ -1,19 +1,8 @@
 /* ============================================================
-   recherche.js — Recherche de joueur Clash Royale (MH Legacy)
-   - Récupère le profil /players/%23TAG
-   - Récupère les combats /players/%23TAG/battles
-   - Affiche le deck actuel + les 20 derniers combats
-     avec le deck de l'adversaire au clic.
-
-   ⚙️  POINT IMPORTANT : l'API officielle refuse les appels
-   directs depuis un navigateur (CORS + token). Il faut un proxy.
-   Adapte PROXY_URL à ton proxy (Cloudflare Worker, Vercel,
-   Netlify, RoyaleAPI, etc.). Les endpoints appelés seront :
-       PROXY_URL + "/players/%23TAG"
-       PROXY_URL + "/players/%23TAG/battles"
+   recherche.js — Connecté à ton Worker Cloudflare
    ============================================================ */
 
-const PROXY_URL = (window.MH_LEGACY_PROXY_URL || "/api").replace(/\/+$/, "");
+const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
 
 /* ---------- Helpers ---------- */
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -24,53 +13,20 @@ function readText(value, fallback = "—") {
 }
 
 function normalizeTag(raw) {
-  return String(raw || "")
-    .trim()
-    .toUpperCase()
-    .replace(/^#/, "")
-    .replace(/[^0-9A-Z]/g, "");
-}
-
-async function fetchJSON(path, { timeoutMs = 12000 } = {}) {
-  const base = PROXY_URL || "";
-  if (!base) {
-    throw new Error("Aucune URL de proxy définie. Configure MH_LEGACY_PROXY_URL ou PROXY_URL.");
-  }
-
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(`${base}${path}`, {
-      headers: { Accept: "application/json" },
-      signal: ctrl.signal,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    return await res.json();
-  } finally {
-    clearTimeout(t);
-  }
+  return String(raw || "").trim().toUpperCase().replace(/^#/, "").replace(/[^0-9A-Z]/g, "");
 }
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;",
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
 
-function parseBattleTime(s) {
-  if (!s) return null;
-  const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
-  if (!m) return null;
-  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
-}
-
-function fmtDate(d) {
-  if (!d) return "";
-  return d.toLocaleString("fr-CH", {
-    day: "2-digit", month: "2-digit", year: "2-digit",
-    hour: "2-digit", minute: "2-digit",
-  });
+function fmtDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  return d.toLocaleString("fr-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
 function rarityClass(r) {
@@ -79,11 +35,11 @@ function rarityClass(r) {
 
 /* ---------- Rendu des cartes ---------- */
 function cardTile(card, { showMax = false } = {}) {
-  const img  = card.iconUrls?.medium || card.iconUrls?.large || "";
+  const img  = card.image || "";
   const name = readText(card.name, "Carte");
-  const lvl  = card.level ?? card.maxLevel ?? "?";
-  const isMax = showMax && card.maxLevel && card.level >= card.maxLevel;
-  const isEvo = Number(card.evolutionLevel || 0) > 0;
+  const lvl  = card.level ?? "?";
+  const isMax = showMax && card.maxed;
+  const isEvo = card.variant === "evo";
 
   const classes = ["cr-tile", rarityClass(card.rarity)];
   if (isMax) classes.push("max");
@@ -109,16 +65,15 @@ function deckGrid(cards) {
 
 /* ---------- Profil ---------- */
 function playerCard(p) {
-  const clan    = p.clan ? `${p.clan.name} (${p.clan.tag})` : "Sans clan";
-  const arena   = p.arena?.name || "";
-  const league  = p.currentPathOfLegendSeasonResult?.leagueNumber;
+  const clan = p.clan || "Sans clan";
+  const arena = p.arena || "";
 
   const stats = [
-    ["Niveau",        p.expLevel,       false],
+    ["Niveau",        p.level,          false],
     ["Trophées",      p.trophies,       true ],
     ["Record",        p.bestTrophies,   false],
     ["Victoires 3 ⭐", p.threeCrownWins, false],
-    ["Parties",       p.totalGames,     false],
+    ["Parties",       p.battleCount,    false],
     ["Victoires",     p.wins,           false],
     ["Défaites",      p.losses,         false],
   ];
@@ -131,14 +86,10 @@ function playerCard(p) {
 
   return `<section class="cr-card">
     <div class="cr-head">
-      <div class="cr-lvl">${esc(p.expLevel ?? "?")}</div>
+      <div class="cr-lvl">${esc(p.level ?? "?")}</div>
       <div>
         <h2 class="cr-name">${esc(p.name)}</h2>
-        <p class="cr-sub">
-          ${esc(p.tag)} · ${esc(clan)}
-          ${arena  ? " · " + esc(arena)  : ""}
-          ${league ? " · Ligue " + esc(league) : ""}
-        </p>
+        <p class="cr-sub">${esc(p.tag)} · ${esc(clan)} ${arena ? " · " + esc(arena) : ""}</p>
       </div>
     </div>
     <div class="cr-stats">${statHtml}</div>
@@ -163,19 +114,8 @@ function currentDeckSection(deck) {
 }
 
 /* ---------- Combats ---------- */
-function outcomeOf(b) {
-  const my  = b.team?.[0];
-  const opp = b.opponent?.[0];
-  if (!my || !opp) return null;
-  if (my.crowns > opp.crowns) return "win";
-  if (my.crowns < opp.crowns) return "loss";
-  return "draw";
-}
-
 function battleHistorySection(battles) {
-  const list = (battles || [])
-    .filter(b => b.team?.[0] && b.opponent?.[0])
-    .slice(0, 20);
+  const list = (battles || []).slice(0, 20);
 
   if (list.length === 0) {
     return `<section class="cr-card">
@@ -185,18 +125,15 @@ function battleHistorySection(battles) {
   }
 
   const buttons = list.map((b, i) => {
-    const out = outcomeOf(b);
-    const my  = b.team[0];
-    const opp = b.opponent[0];
+    const out = b.result; // 'win', 'loss', 'draw'
     const letter = out === "win" ? "V" : out === "loss" ? "D" : "N";
-    const perfect = out === "win" && Number(my.crowns || 0) === 3 && Number(opp.crowns || 0) === 0;
+    const perfect = out === "win" && b.crowns === 3 && b.oppCrowns === 0;
     const extraClass = perfect ? " cr-bt-perfect" : "";
 
     return `<button type="button" class="cr-bt cr-bt-${out}${extraClass}"
-              data-battle="${i}" aria-pressed="false"
-              aria-label="Combat ${i + 1} : ${letter}">
+              data-battle="${i}" aria-pressed="false" aria-label="Combat ${i + 1} : ${letter}">
       <b>${letter}</b>
-      <small>${my.crowns}–${opp.crowns}</small>
+      <small>${b.crowns}–${b.oppCrowns}</small>
     </button>`;
   }).join("");
 
@@ -211,33 +148,30 @@ function battleHistorySection(battles) {
 }
 
 function renderBattleDetail(b) {
-  const my  = b.team[0];
-  const opp = b.opponent[0];
-  const out = outcomeOf(b);
+  const out = b.result;
   const verb = out === "win" ? "Victoire" : out === "loss" ? "Défaite" : "Match nul";
-  const date = fmtDate(parseBattleTime(b.battleTime));
-  const mode = b.gameMode?.name || "";
-  const arena = b.arena?.name || "";
+  const oppName = b.opponents?.[0] || "adversaire";
+  const date = fmtDate(b.time);
 
-  const oppCards = (opp.cards || []).map(c => `
+  const oppCards = (b.oppCards || []).map(c => `
     <div class="bd-card">
-      <img src="${esc(c.iconUrls?.medium || c.iconUrls?.large || "")}" alt="${esc(c.name || "Carte")}" title="${esc(c.name || "Carte")}" loading="lazy">
-      <span class="bd-card-name">${esc(c.name || "Carte")}</span>
-      <span class="bd-card-meta">${esc(c.level ?? c.maxLevel ?? "")}</span>
+      <img src="${esc(c.image || "")}" alt="${esc(c.name)}" title="${esc(c.name)}" loading="lazy">
+      <span class="bd-card-name">${esc(c.name)}</span>
+      <span class="bd-card-meta">Niv ${esc(c.level || "?")}</span>
     </div>
   `).join("");
 
   return `<div class="cr-battle-detail">
     <div class="bd-head">
-      <span class="bd-result ${out === "win" ? "win" : out === "loss" ? "loss" : "draw"}">${out === "win" ? "V" : out === "loss" ? "D" : "N"}</span>
+      <span class="bd-result ${out}">${out === "win" ? "V" : out === "loss" ? "D" : "N"}</span>
       <div class="bd-info">
-        <h4>${verb} contre ${esc(opp.name || "adversaire")}</h4>
-        <p>${esc(opp.tag || "—")} · ${my.crowns}–${opp.crowns}${mode ? " · " + esc(mode) : ""}${arena ? " · " + esc(arena) : ""}${date ? " · " + esc(date) : ""}</p>
+        <h4>${verb} contre ${esc(oppName)}</h4>
+        <p>${b.crowns}–${b.oppCrowns} couronnes ${date ? " · " + esc(date) : ""}</p>
       </div>
     </div>
     <div class="bd-deck">
       <h5>Deck adverse</h5>
-      <div class="bd-cards">${oppCards || '<div class="cr-empty">Aucune carte disponible pour ce combat.</div>'}</div>
+      <div class="bd-cards">${oppCards || '<div class="cr-empty">Aucune carte disponible.</div>'}</div>
     </div>
   </div>`;
 }
@@ -249,7 +183,7 @@ function render(player, battles) {
 
   result.innerHTML = `
     ${playerCard(player)}
-    ${currentDeckSection(player.currentDeck || [])}
+    ${currentDeckSection(player.deck || [])}
     ${battleHistorySection(battles)}
   `;
 
@@ -275,30 +209,31 @@ function render(player, battles) {
 }
 
 /* ---------- Recherche ---------- */
-async function doSearch(tag, { fromUrl = false } = {}) {
+async function doSearch(tag) {
   const result = document.getElementById("search-result");
   if (!result) return;
 
   result.innerHTML = `<p class="cr-message">Recherche de <strong>#${esc(tag)}</strong>…</p>`;
 
   try {
-    const [player, battles] = await Promise.all([
-      fetchJSON(`/players/%23${encodeURIComponent(tag)}`),
-      fetchJSON(`/players/%23${encodeURIComponent(tag)}/battles`).catch(() => []),
-    ]);
-    render(player, battles);
+    const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(tag)}`);
+    
+    if (res.status === 404) throw new Error("Joueur introuvable.");
+    if (!res.ok) throw new Error("Erreur serveur (" + res.status + ").");
+    
+    const data = await res.json();
+    render(data.player, data.battles);
+    
+    // Met à jour l'URL
+    const url = new URL(location.href);
+    url.searchParams.set("tag", tag);
+    history.replaceState(null, "", url);
 
-    if (!fromUrl) {
-      const url = new URL(location.href);
-      url.searchParams.set("tag", tag);
-      history.replaceState(null, "", url);
-    }
   } catch (err) {
     console.error("[recherche]", err);
     result.innerHTML = `<p class="cr-message">
       Impossible de charger <strong>#${esc(tag)}</strong>.<br>
-      Vérifie le tag, le proxy API (<code>${esc(PROXY_URL)}</code>)
-      et la console pour plus de détails.
+      ${esc(err.message)}
     </p>`;
   }
 }
@@ -317,10 +252,13 @@ async function doSearch(tag, { fromUrl = false } = {}) {
     doSearch(tag);
   });
 
-  // Support ?tag=XXXX dans l'URL (utile pour partager un profil)
+  // Support ?tag=XXXX dans l'URL
   const tagFromUrl = normalizeTag(new URLSearchParams(location.search).get("tag"));
   if (tagFromUrl) {
     input.value = "#" + tagFromUrl;
-    doSearch(tagFromUrl, { fromUrl: true });
+    doSearch(tagFromUrl);
+  } else {
+    input.value = "#V9JJGLL0G";
+    doSearch("V9JJGLL0G");
   }
 })();

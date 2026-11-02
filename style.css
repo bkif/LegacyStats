@@ -1,77 +1,124 @@
 /* =====================================================
-   MH Legacy — style « arène » : bleu vif, or, contours encre
+   MH Legacy — design system
    ===================================================== */
 :root {
-  --sky: #2f80ff;
-  --sky-d: #1650c9;
-  --royal: #1f4bb8;
-  --panel: #14338f;
-  --panel-d: #0d2670;
-  --ink: #06133f;
-  --night: #0a1a52;
+  --night: #070f2b;
+  --deep: #0c1a4a;
+  --panel: #12245f;
+  --panel-soft: rgba(18, 36, 95, 0.72);
+  --royal: #2352d8;
+  --ink: #050b21;
   --gold: #ffc933;
   --gold-d: #b8730a;
   --pink: #e03bd6;
-  --snow: #ffffff;
-  --mut: #cfe0ff;
-  --line: rgba(255,255,255,.22);
-  --danger: #ff4b5c;
-  --ok: #34d878;
-  --radius: 20px;
-  --shadow: 0 8px 0 rgba(0,0,0,.28);
+  --snow: #eef3ff;
+  --mut: #a9b8e6;
+  --line: rgba(255,255,255,.1);
+  --danger: #ff5a6a;
+  --ok: #3ddc84;
+  --radius: 18px;
+  --shadow: 0 18px 40px rgba(0,0,0,.35);
   --display: Bungee, "Arial Black", system-ui, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { color-scheme: dark; scroll-behavior: smooth; scroll-padding-top: 90px; }
+html { color-scheme: dark; scroll-behavior: smooth; scroll-padding-top: 84px; }
 body {
   margin: 0; min-height: 100vh;
   font: 400 1.05rem/1.65 Nunito, system-ui, sans-serif; color: var(--snow);
   background:
-    radial-gradient(1000px 520px at 50% -8%, rgba(120,190,255,.55), transparent 65%),
-    repeating-conic-gradient(rgba(255,255,255,.05) 0 25%, transparent 0 50%) 0 0 / 64px 64px,
-    linear-gradient(#2f80ff, #1650c9 60%, #0f3a9c);
+    radial-gradient(900px 500px at 85% -10%, rgba(35,82,216,.35), transparent 60%),
+    radial-gradient(700px 420px at -10% 20%, rgba(224,59,214,.14), transparent 60%),
+    linear-gradient(180deg, #070f2b 0%, #091a3f 100%);
   background-attachment: fixed;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(255,255,255,.02), transparent 28%),
+              repeating-linear-gradient(90deg, rgba(255,255,255,.02), rgba(255,255,255,.02) 1px, transparent 1px, transparent 32px);
+  opacity: .55;
 }
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--gold); text-underline-offset: 3px; }
-a:hover { color: #fff1b8; }
+a:hover { color: #ffe08a; }
 button { font: inherit; }
-:focus-visible { outline: 3px solid #fff; outline-offset: 3px; border-radius: 8px; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 8px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* En-tête */
-.top { position: sticky; top: 0; z-index: 50; background: var(--night); border-bottom: 4px solid var(--gold); box-shadow: 0 6px 0 rgba(0,0,0,.25); }
-.bar { max-width: 1180px; margin: auto; display: flex; align-items: center; gap: 14px; padding: 8px 16px; }
+.top {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(7,15,43,.72);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+.top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--pink), transparent);
+  opacity: .9;
+}
+.bar { max-width: 1180px; margin: auto; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
 .bar > a:first-child { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
-.bar > a:first-child::after { content: "MH Legacy"; font: 400 1.15rem var(--display); color: #fff; }
-.bar img { width: 42px; height: 42px; }
+.bar > a:first-child::after { content: "MH Legacy"; font: 400 1.15rem var(--display); color: var(--snow); letter-spacing: .02em; }
+.bar img { width: 42px; height: 42px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.35)); }
 .nav { margin-left: auto; min-width: 0; }
-.nav-links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.nav-links { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .nav-links::-webkit-scrollbar { display: none; }
-.nav-links a { padding: 8px 14px; border-radius: 12px; border: 2px solid transparent; color: var(--mut); font-weight: 800; font-size: .95rem; text-decoration: none; white-space: nowrap; }
-.nav-links a:hover { background: var(--royal); border-color: #6aa2ff; color: #fff; }
-.nav-links a[aria-current="page"] { background: linear-gradient(#ffd75e, #f2a000); color: #2b1a00; box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 3px 0 var(--gold-d); }
+.nav-links a {
+  padding: 8px 14px; border-radius: 999px; color: var(--mut);
+  font-weight: 800; font-size: .95rem; text-decoration: none; white-space: nowrap;
+  transition: background .15s, color .15s, transform .15s;
+}
+.nav-links a:hover { background: rgba(255,255,255,.08); color: #fff; transform: translateY(-1px); }
+.nav-links a[aria-current="page"] { background: linear-gradient(180deg, #ffd75e, #f3b423); color: #2b1a00; box-shadow: inset 0 2px 0 rgba(255,255,255,.4); }
 
-/* Titres : contour encre façon logo du jeu */
-h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 400; line-height: 1.12; color: #fff; paint-order: stroke fill; -webkit-text-stroke: 5px var(--ink); text-shadow: 0 4px 0 var(--ink); }
-h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); color: var(--gold); }
+/* Titres */
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 400; line-height: 1.12; letter-spacing: .01em; color: var(--snow); }
+h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); text-shadow: 0 8px 22px rgba(0,0,0,.25); }
 h2 { font-size: clamp(1.4rem, 3.4vw, 2rem); }
-h3 { font-size: 1.2rem; -webkit-text-stroke-width: 4px; }
+h3 { font-size: 1.2rem; }
 
 /* Boutons */
-.btn, button.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 26px; border-radius: 14px; border: 3px solid var(--ink); background: linear-gradient(#ffd75e, #f2a000); color: #2b1a00; font: 400 1rem var(--display); text-decoration: none; cursor: pointer; box-shadow: inset 0 3px 0 rgba(255,255,255,.6), 0 6px 0 var(--ink); transition: transform .12s; }
+.btn, button.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 26px; border-radius: 14px; border: 0;
+  background: linear-gradient(#ffd75e, #f2a000); color: #2b1a00;
+  font: 400 1rem var(--display); text-decoration: none; cursor: pointer;
+  box-shadow: 0 5px 0 var(--gold-d), 0 14px 24px rgba(0,0,0,.35);
+  transition: transform .12s, box-shadow .12s;
+}
 .btn:hover { transform: translateY(-2px); color: #2b1a00; }
-.btn:active { transform: translateY(4px); box-shadow: inset 0 3px 0 rgba(255,255,255,.6), 0 2px 0 var(--ink); }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-d); }
 
 /* Pages */
-.page { max-width: 1180px; margin: auto; padding: 52px 16px 40px; }
-.page > h1::after { content: ""; display: block; width: 84px; height: 8px; border-radius: 8px; margin-top: 16px; background: var(--gold); border: 3px solid var(--ink); }
-.lead { margin: 16px 0 30px; color: var(--mut); max-width: 62ch; font-size: 1.1rem; font-weight: 700; }
+.page {
+  max-width: 1180px; margin: auto; padding: 56px 16px 40px;
+  position: relative;
+}
+.page > h1::after {
+  content: ""; display: block; width: 72px; height: 6px; border-radius: 6px;
+  margin-top: 14px; background: linear-gradient(90deg, var(--gold), var(--pink));
+  box-shadow: 0 0 18px rgba(255,201,51,.45);
+}
+.lead { margin: 16px 0 32px; color: var(--mut); max-width: 62ch; font-size: 1.1rem; }
 
-footer { max-width: 1180px; margin: 40px auto 0; padding: 28px 16px 48px; border-top: 3px solid rgba(6,19,63,.5); color: var(--mut); font-size: .88rem; }
+/* Pied de page */
+footer {
+  max-width: 1180px; margin: 40px auto 0; padding: 28px 16px 48px;
+  border-top: 1px solid var(--line); color: var(--mut); font-size: .88rem;
+}
 footer p { margin: 0; max-width: 80ch; }
+
 .skip { position: absolute; left: -999px; top: 8px; z-index: 100; padding: 8px 14px; border-radius: 8px; background: var(--gold); color: #222; }
 .skip:focus { left: 8px; }
 
-@media (max-width: 720px) { .bar > a:first-child::after { display: none; } .nav-links a { padding: 7px 10px; font-size: .86rem; } }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+@media (max-width: 720px) {
+  .bar > a:first-child::after { display: none; }
+  .nav-links a { padding: 7px 11px; font-size: .88rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}

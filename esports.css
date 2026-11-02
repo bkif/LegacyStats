@@ -12,8 +12,9 @@
   padding: 28px 24px;
   text-align: center;
   border-radius: 24px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255,255,255,.08);
   background: linear-gradient(180deg, rgba(35,82,216,.22), rgba(12,26,74,.5));
+  box-shadow: 0 18px 30px rgba(5,11,33,.12);
   transition: transform .15s, border-color .15s;
 }
 .teams-box:hover { transform: translateY(-4px); border-color: var(--gold); }
