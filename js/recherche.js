@@ -134,6 +134,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  async function loadFallbackData(tag) {
+    const response = await fetch("./data/player.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Données locales indisponibles.");
+
+    const data = await response.json();
+    const wanted = (tag || "").replace(/^#/, "").toUpperCase();
+    const defaultTag = (data.tag || "").replace(/^#/, "").toUpperCase();
+
+    if (wanted && wanted !== defaultTag && wanted !== DEFAULT_TAG) {
+      throw new Error("Aucune donnée locale pour ce tag.");
+    }
+
+    return {
+      player: data,
+      battles: Array.isArray(data.battles) ? data.battles : []
+    };
+  }
+
   async function search(tag) {
     out.innerHTML = `<p class="cr-message">Recherche en cours...</p>`;
     try {
@@ -151,12 +169,19 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await res.json();
       if (!data.battles) data.battles = [];
       render(data.player, data.battles);
-    } catch (e) {
-      const reason = e?.message || "Erreur inconnue.";
-      out.innerHTML = `<p class="cr-message">
-        Impossible de charger les données.<br>
-        <small>${esc(reason)}<br>Vérifie que le worker accepte localhost et GitHub Pages (CORS).</small>
-      </p>`;
+      return;
+    } catch (workerErr) {
+      try {
+        const fallback = await loadFallbackData(tag);
+        render(fallback.player, fallback.battles);
+        return;
+      } catch (fallbackErr) {
+        const reason = fallbackErr?.message || workerErr?.message || "Erreur inconnue.";
+        out.innerHTML = `<p class="cr-message">
+          Impossible de charger les données.<br>
+          <small>${esc(reason)}<br>Vérifie que le worker accepte localhost et GitHub Pages (CORS).</small>
+        </p>`;
+      }
     }
   }
 
