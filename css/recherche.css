@@ -44,35 +44,125 @@
 .cr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 @media (max-width: 900px) { .cr-cols { grid-template-columns: 1fr; } }
 
-/* deck */
+/* ===== Tuiles de cartes (deck + collection + combats) ===== */
 .cr-deckgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .cr-slot { aspect-ratio: 3 / 4; }
-.cr-tile { position: relative; width: 100%; height: 100%; border-radius: 12px; background: #0d1840; border: 3px solid #5d6aa0; }
-.cr-art { width: 100%; height: 100%; border-radius: 9px; overflow: hidden; }
-.cr-art img { width: 100%; height: 100%; object-fit: cover; }
+
+.cr-tile {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  /* Fond dégradé visible pendant le chargement ou si l'image échoue */
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,255,255,.12), transparent 70%),
+    linear-gradient(180deg, #12245f, #0a1640);
+  border: 3px solid #5d6aa0;
+  overflow: hidden;
+}
+
+.cr-art {
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.cr-art img {
+  width: 100%;
+  height: 100%;
+  /* contain : on ne rogne pas l'illustration de la carte */
+  object-fit: contain;
+  /* évite le "flash" de l'image pendant le chargement */
+  background: transparent;
+  display: block;
+}
+
+/* Élixir */
 .cr-el {
   position: absolute; top: -9px; left: -9px; z-index: 4; width: 26px; height: 26px;
   display: grid; place-items: center; border-radius: 50%;
   background: var(--pink); border: 2px solid #fff; font-weight: 800; font-size: .85rem; color: #fff;
+  box-shadow: 0 2px 0 var(--ink);
 }
+
+/* Niveau */
 .cr-lv {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 0; text-align: center;
   background: rgba(5,11,33,.85); font-weight: 800; font-size: .72rem; border-radius: 0 0 9px 9px;
 }
-.cr-r-common { border-color: #5aa0f0; } .cr-r-rare { border-color: #f09a2a; }
-.cr-r-epic { border-color: #b24fe8; } .cr-r-legendary { border-color: #34d1de; }
-.cr-r-champion, .cr-r-hero { border-color: #ffc933; }
-.cr-v-evo { border-color: var(--pink); box-shadow: 0 0 18px rgba(224,59,214,.55); }
+.cr-tile.max .cr-lv {
+  background: linear-gradient(#ffd75e, #f2a000);
+  color: #2b1a00;
+}
+
+/* Raretés (bordures) */
+.cr-r-common    { border-color: #5aa0f0; }
+.cr-r-rare      { border-color: #f09a2a; }
+.cr-r-epic      { border-color: #b24fe8; }
+.cr-r-legendary { border-color: #34d1de; }
+.cr-r-champion,
+.cr-r-hero      { border-color: #ffc933; }
+
+/* Variantes (lueurs) */
+.cr-v-evo  { border-color: var(--pink); box-shadow: 0 0 18px rgba(224,59,214,.55); }
 .cr-v-hero { border-color: var(--gold); box-shadow: 0 0 18px rgba(255,201,51,.5); }
 
-/* combats */
-.cr-battles { display: flex; flex-direction: column; gap: 10px; }
-.cr-battle { padding: 12px 14px; border-radius: 14px; background: rgba(5,11,33,.5); border: 1px solid var(--line); }
-.cr-battle-head { display: flex; align-items: center; gap: 12px; }
-.cr-badge { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; font-weight: 800; color: #04210f; }
-.cr-badge-win { background: var(--ok); } .cr-badge-loss { background: var(--danger); color: #2a0006; }
-.cr-score { font-weight: 800; }
-.cr-time { margin-left: auto; font-size: .85rem; color: var(--mut); font-weight: 700; }
-.cr-meta { margin: 6px 0 8px; font-size: .88rem; color: var(--mut); }
-.cr-deck-small { display: flex; flex-wrap: wrap; gap: 4px; }
-.cr-deck-small img { width: 34px; border-radius: 6px; }
+/* ===== 20 derniers combats (V / D) ===== */
+.cr-form20 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+@media (max-width: 700px) { .cr-form20 { grid-template-columns: repeat(5, 1fr); } }
+
+.cr-bt {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 8px 0; border-radius: 14px; border: 3px solid var(--ink); cursor: pointer;
+  color: #fff; box-shadow: inset 0 3px 0 rgba(255,255,255,.4), 0 5px 0 var(--ink);
+  transition: transform .12s;
+}
+.cr-bt:hover { transform: translateY(-3px); }
+.cr-bt[aria-pressed="true"] { outline: 4px solid #fff; outline-offset: 2px; }
+.cr-bt-win  { background: linear-gradient(#55e892, #1fae5c); }
+.cr-bt-loss { background: linear-gradient(#ff7381, #d62d42); }
+.cr-bt-draw { background: linear-gradient(#aab6d8, #6b78a0); }
+.cr-bt b {
+  font: 400 1.6rem/1.1 var(--display);
+  paint-order: stroke fill;
+  -webkit-text-stroke: 4px var(--ink);
+}
+.cr-bt small { font-weight: 800; font-size: .8rem; text-shadow: 0 1px 0 var(--ink); }
+
+/* ===== Détail d'un combat ===== */
+.cr-detail {
+  margin-top: 18px; padding: 16px; border-radius: 16px;
+  background: rgba(5,11,33,.55); border: 2px solid rgba(255,255,255,.16);
+}
+.cr-detail h4 { margin: 0 0 4px; font: 400 1.1rem var(--display); }
+.cr-detail p { margin: 0 0 10px; color: var(--mut); font-weight: 700; }
+
+/* Mini-deck du combat : images sans layout shift */
+.cr-minideck { display: flex; flex-wrap: wrap; gap: 6px; }
+.cr-minideck img {
+  width: 46px;
+  aspect-ratio: 3 / 4;      /* réserve l'espace → pas de CLS */
+  object-fit: contain;      /* ne rogne pas la carte */
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+  background: rgba(5,11,33,.5); /* visible si image absente/lente */
+}
+
+/* ===== Collection complète (recherche.js) ===== */
+.cr-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.cr-toolbar input,
+.cr-toolbar select {
+  padding: 10px 14px; border-radius: 12px; border: 3px solid var(--ink);
+  background: #fff; color: var(--ink); font: 800 .95rem Nunito, sans-serif;
+}
+.cr-toolbar input { flex: 1 1 200px; }
+.cr-empty {
+  grid-column: 1 / -1; text-align: center; color: var(--mut); font-weight: 700; padding: 24px 0;
+}
+
+/* Collection : tuiles compactes */
+.cr-collgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 14px; padding-top: 6px; }
+@media (max-width: 900px) { .cr-deckgrid { grid-template-columns: repeat(4, 1fr); } }
