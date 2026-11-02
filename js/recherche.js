@@ -13,10 +13,15 @@
        PROXY_URL + "/players/%23TAG/battles"
    ============================================================ */
 
-const PROXY_URL = "/api"; // ← change si ton proxy a une autre URL
+const PROXY_URL = (window.MH_LEGACY_PROXY_URL || "/api").replace(/\/+$/, "");
 
 /* ---------- Helpers ---------- */
 const $ = (sel, root = document) => root.querySelector(sel);
+
+function readText(value, fallback = "—") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
 
 function normalizeTag(raw) {
   return String(raw || "")
@@ -27,10 +32,15 @@ function normalizeTag(raw) {
 }
 
 async function fetchJSON(path, { timeoutMs = 12000 } = {}) {
+  const base = PROXY_URL || "";
+  if (!base) {
+    throw new Error("Aucune URL de proxy définie. Configure MH_LEGACY_PROXY_URL ou PROXY_URL.");
+  }
+
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(PROXY_URL + path, {
+    const res = await fetch(`${base}${path}`, {
       headers: { Accept: "application/json" },
       signal: ctrl.signal,
     });
@@ -70,19 +80,21 @@ function rarityClass(r) {
 /* ---------- Rendu des cartes ---------- */
 function cardTile(card, { showMax = false } = {}) {
   const img  = card.iconUrls?.medium || card.iconUrls?.large || "";
-  const name = card.name || "Carte";
+  const name = readText(card.name, "Carte");
   const lvl  = card.level ?? card.maxLevel ?? "?";
   const isMax = showMax && card.maxLevel && card.level >= card.maxLevel;
-  const isEvo = card.evolutionLevel > 0;
+  const isEvo = Number(card.evolutionLevel || 0) > 0;
 
   const classes = ["cr-tile", rarityClass(card.rarity)];
   if (isMax) classes.push("max");
   if (isEvo) classes.push("cr-v-evo");
 
+  const imageMarkup = img
+    ? `<img src="${esc(img)}" alt="${esc(name)}" loading="lazy">`
+    : `<div class="cr-art-empty" aria-hidden="true">?</div>`;
+
   return `<div class="${classes.join(" ")}" title="${esc(name)}">
-    <div class="cr-art">
-      <img src="${esc(img)}" alt="${esc(name)}" loading="lazy">
-    </div>
+    <div class="cr-art">${imageMarkup}</div>
     <span class="cr-lv">Niv ${esc(lvl)}</span>
   </div>`;
 }
@@ -177,7 +189,10 @@ function battleHistorySection(battles) {
     const my  = b.team[0];
     const opp = b.opponent[0];
     const letter = out === "win" ? "V" : out === "loss" ? "D" : "N";
-    return `<button type="button" class="cr-bt cr-bt-${out}"
+    const perfect = out === "win" && Number(my.crowns || 0) === 3 && Number(opp.crowns || 0) === 0;
+    const extraClass = perfect ? " cr-bt-perfect" : "";
+
+    return `<button type="button" class="cr-bt cr-bt-${out}${extraClass}"
               data-battle="${i}" aria-pressed="false"
               aria-label="Combat ${i + 1} : ${letter}">
       <b>${letter}</b>
@@ -205,18 +220,26 @@ function renderBattleDetail(b) {
   const arena = b.arena?.name || "";
 
   const oppCards = (opp.cards || []).map(c => `
-    <img src="${esc(c.iconUrls?.medium || "")}" alt="${esc(c.name)}"
-         title="${esc(c.name)}" loading="lazy">
+    <div class="bd-card">
+      <img src="${esc(c.iconUrls?.medium || c.iconUrls?.large || "")}" alt="${esc(c.name || "Carte")}" title="${esc(c.name || "Carte")}" loading="lazy">
+      <span class="bd-card-name">${esc(c.name || "Carte")}</span>
+      <span class="bd-card-meta">${esc(c.level ?? c.maxLevel ?? "")}</span>
+    </div>
   `).join("");
 
-  return `<h4>${verb} contre ${esc(opp.name)}</h4>
-    <p>
-      ${esc(opp.tag)} · ${my.crowns}–${opp.crowns}
-      ${mode  ? " · " + esc(mode)  : ""}
-      ${arena ? " · " + esc(arena) : ""}
-      ${date  ? " · " + esc(date)  : ""}
-    </p>
-    <div class="cr-minideck">${oppCards}</div>`;
+  return `<div class="cr-battle-detail">
+    <div class="bd-head">
+      <span class="bd-result ${out === "win" ? "win" : out === "loss" ? "loss" : "draw"}">${out === "win" ? "V" : out === "loss" ? "D" : "N"}</span>
+      <div class="bd-info">
+        <h4>${verb} contre ${esc(opp.name || "adversaire")}</h4>
+        <p>${esc(opp.tag || "—")} · ${my.crowns}–${opp.crowns}${mode ? " · " + esc(mode) : ""}${arena ? " · " + esc(arena) : ""}${date ? " · " + esc(date) : ""}</p>
+      </div>
+    </div>
+    <div class="bd-deck">
+      <h5>Deck adverse</h5>
+      <div class="bd-cards">${oppCards || '<div class="cr-empty">Aucune carte disponible pour ce combat.</div>'}</div>
+    </div>
+  </div>`;
 }
 
 /* ---------- Rendu global ---------- */
@@ -233,10 +256,16 @@ function render(player, battles) {
   const detail  = document.getElementById("battle-detail");
   const buttons = result.querySelectorAll(".cr-bt");
 
+  if (detail) {
+    detail.innerHTML = "";
+    detail.hidden = true;
+  }
+
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const b = battles[+btn.dataset.battle];
-      if (!b) return;
+      if (!b || !detail) return;
+
       buttons.forEach(x => x.setAttribute("aria-pressed", "false"));
       btn.setAttribute("aria-pressed", "true");
       detail.innerHTML = renderBattleDetail(b);
