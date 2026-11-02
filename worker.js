@@ -48,24 +48,12 @@ export default {
 
     const battles = log.slice(0, 20).map((b) => {
       const me = b.team?.[0] ?? {};
+      const opp = b.opponent?.[0] ?? {};
       
-      // ✅ Extraction CORRIGÉE de l'adversaire
-      // L'API met l'adversaire dans b.opponent.players[0] (et non b.opponent[0])
-      let opp = {};
-      if (b.opponent) {
-        if (Array.isArray(b.opponent)) {
-          opp = b.opponent[0] ?? {}; // Ancien format ou 2v2
-        } else if (b.opponent.players && Array.isArray(b.opponent.players)) {
-          opp = b.opponent.players[0] ?? {}; // Format actuel de l'API
-        } else {
-          opp = b.opponent; // Fallback
-        }
-      }
-
       const crowns = me.crowns ?? 0;
       const oppCrowns = opp.crowns ?? 0;
 
-      // ✅ Le joueur a "cards", l'adversaire a "deck"
+      // 🛡️ Extraction robuste pour le deck adverse (l'API met parfois .cards, parfois .deck)
       const myCardsRaw = me.cards || me.deck || [];
       const oppCardsRaw = opp.cards || opp.deck || [];
 
@@ -74,7 +62,7 @@ export default {
         crowns,
         oppCrowns,
         time: isoTime(b.battleTime),
-        opponents: (b.opponent?.players || b.opponent || []).map((o) => o.name),
+        opponents: (b.opponent || []).map((o) => o.name),
         cards: myCardsRaw.map(mapCard),
         oppCards: oppCardsRaw.map(mapCard),
       };
@@ -85,7 +73,6 @@ export default {
       wins: p.wins, losses: p.losses, battleCount: p.battleCount, threeCrownWins: p.threeCrownWins,
       totalDonations: p.totalDonations, donationsReceived: p.donationsReceived, warDayWins: p.warDayWins,
       clanWarTrophies: p.clanWarTrophies, challengeMaxWins: p.challengeMaxWins, challengeCardsWon: p.challengeCardsWon,
-      tournamentBattleCount: p.tournamentBattleCount, tournamentCardsWon: p.tournamentCardsWon,
       role: p.role, arena: p.arena?.name, clan: p.clan?.name, favouriteCard: p.currentFavouriteCard?.name,
       deck: (p.currentDeck || []).map(mapCard),
       cards: (p.cards || []).map(mapCard),
