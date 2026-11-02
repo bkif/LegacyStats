@@ -1,164 +1,204 @@
 <div align="center">
 
-<img src="images/logo_clash_royale.png" alt="Logo MH Legacy" width="110">
+<img src="images/logo_clash_royale.png" alt="Logo MH Legacy" width="120">
 
-# MH Legacy — Clash Royale Stats
+# MH Legacy
 
-**Le site Clash Royale suisse 🇨🇭 : cartes, deck builder, stats de joueur, nouveautés et e-sport.**
+### Clash Royale Stats — le site Clash Royale suisse 🇨🇭
+
+Cherche n'importe quel joueur, compose ton deck, explore toutes les cartes et suis l'actualité du jeu.
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=for-the-badge&logo=github&logoColor=white)
 
-[Fonctionnalités](#-fonctionnalités) •
-[Pages](#-pages) •
-[Installation](#-installation) •
-[Structure](#-structure-du-projet) •
-[Données](#-données-et-automatisation) •
-[Auteur](#-auteur)
+**[Fonctionnalités](#-fonctionnalités) · [Pages](#-pages) · [Design](#-design) · [Installation](#-installation) · [Structure](#-structure) · [Données](#-données-et-automatisation) · [Auteur](#-auteur)**
 
 </div>
 
 ---
 
-## 📖 À propos
-
-**Clash Royale Stats** est un site web interactif destiné aux joueurs suisses et francophones de Clash Royale. Il centralise sur une seule plateforme :
-
-- les **cartes** du jeu avec leurs descriptions,
-- un **deck builder** avec calcul de l'élixir moyen,
-- les **statistiques d'un joueur** (profil, deck actuel, 20 derniers combats),
-- les **nouveautés** (saisons, équilibrages, événements),
-- les **équipes e-sport** et la Clash Royale League.
-
-Le site est 100 % statique (HTML, CSS, JavaScript natif, sans framework). Les cartes viennent d'une base de données JSON locale, et les stats du joueur d'un petit Worker Cloudflare qui interroge l'API officielle.
-
 ## ✨ Fonctionnalités
 
-| | Fonctionnalité | Détail |
-|---|---|---|
-| 🃏 | **Collection de cartes** | Plus de 160 cartes : normales, évolutions, héros, champions et tours |
-| 🧱 | **Deck builder** | Glisser-déposer ou clic pour remplir les 8 cases, clic droit pour vider, calcul de l'élixir moyen |
-| 🔎 | **Fiches de cartes** | Recherche par nom et filtre par rareté (commune, rare, épique, légendaire, champion, héros) |
-| 📊 | **Stats de joueur** | Trophées, record, victoires/défaites, taux de victoire, 3 couronnes, deck actuel, 20 derniers combats |
-| 📰 | **Nouveautés** | Équilibrages (nerfs, buffs, refontes) classés par saison |
-| 🏆 | **E-sport** | Team Liquid, SK Gaming, Tribe Gaming : gains, tournois, records de spectateurs |
-| 🎬 | **CRL** | Vidéos et moments forts de la Clash Royale League |
-| ♿ | **Accessibilité** | Lien d'évitement, navigation au clavier, `aria-label`, `aria-live` |
-| 📱 | **Responsive** | Mise en page adaptée mobile, tablette et ordinateur |
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔎 Recherche de joueur
+Entre un tag et obtiens le profil, les trophées, le taux de victoire, le **deck actuel** (évolutions et héros mis en évidence) et les **20 derniers combats**.
+
+</td>
+<td width="50%" valign="top">
+
+### 🧱 Deck builder
+Glisse-dépose (ou clique) les cartes dans les **8 emplacements**, clic droit pour vider, et l'**élixir moyen** se calcule en direct.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🃏 Fiches des cartes
+Plus de **160 cartes** (normales, évolutions, héros, champions, tours) avec recherche par nom et filtre par rareté.
+
+</td>
+<td valign="top">
+
+### 📰 Nouveautés
+Les équilibrages (nerfs 🔴, buffs 🟢, refontes 🔵) classés par saison.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🏆 E-sport & CRL
+Palmarès de Team Liquid, SK Gaming et Tribe Gaming, plus les moments forts de la Clash Royale League.
+
+</td>
+<td valign="top">
+
+### ♿ Accessible et responsive
+Navigation au clavier, lien d'évitement, `aria-label`, `aria-live`, focus visible, mouvements réduits respectés, mise en page mobile.
+
+</td>
+</tr>
+</table>
 
 ## 🗺️ Pages
 
-| Page | Fichier | Rôle |
+| Page | Fichier | Contenu |
 |---|---|---|
-| Accueil | `index.html` | Présentation et recherche de joueur par tag |
-| Cartes | `cartes.html` | Deck builder |
-| Fiches | `description_cartes.html` | Descriptions, recherche et filtres |
-| Nouveautés | `news.html` | Équilibrages par saison |
-| E-sport | `e-sport.html` | Équipes et tournois |
-| Clans | `clan_site.html` | Page clan |
-| CRL | `crl.html` | Vidéos de la Clash Royale League |
-| Contact | `contact.html` | Formulaire et présentation de l'auteur |
+| 🏠 Accueil | `index.html` | Recherche de joueur et accès rapide |
+| 🃏 Cartes | `cartes.html` | Deck builder |
+| 🔎 Fiches | `description_cartes.html` | Descriptions, recherche, filtres |
+| 📰 Nouveautés | `news.html` | Équilibrages par saison |
+| 🏆 E-sport | `e-sport.html` | Équipes et tournois |
+| 🛡️ Clans | `clan_site.html` | Page clan |
+| 🎬 CRL | `crl.html` | Vidéos de la Clash Royale League |
+| ✉️ Contact | `contact.html` | Formulaire et présentation de l'auteur |
+
+## 🎨 Design
+
+Le style s'inspire de l'arène du jeu : un fond **bleu nuit**, de l'**or royal** pour les actions et la page active, et du **rose élixir** pour les détails.
+
+| Rôle | Couleur |
+|---|---|
+| Fond | `#070f2b` |
+| Panneaux | `#12245f` |
+| Accent principal (or) | `#ffc933` |
+| Accent secondaire (élixir) | `#e03bd6` |
+| Texte | `#eef3ff` |
+
+- **Typographie :** [Bungee](https://fonts.google.com/specimen/Bungee) pour les titres (clin d'œil au jeu), [Nunito](https://fonts.google.com/specimen/Nunito) pour le texte.
+- **Système de variables CSS** dans `css/style.css`, un fichier CSS par page.
+- **Rareté en couleur :** bleu (commune), orange (rare), violet (épique), cyan (légendaire), or (champion et héros).
+- Évolutions entourées d'une lueur rose, héros d'une lueur dorée.
 
 ## 🚀 Installation
 
-Aucune dépendance à installer : c'est un site statique.
+Aucune dépendance : c'est un site statique.
 
 ```bash
-# 1. Cloner le dépôt
-git clone https://github.com/<ton-utilisateur>/Clash-Royale-Stats-Martin.git
-cd Clash-Royale-Stats-Martin
+git clone https://github.com/<ton-utilisateur>/<nom-du-depot>.git
+cd <nom-du-depot>
 
-# 2. Lancer un petit serveur local (au choix)
+# Lancer un serveur local (au choix)
 npx serve .
-# ou
 python -m http.server 8000
 ```
 
-Ouvre ensuite `http://localhost:8000` dans ton navigateur.
+Ouvre ensuite `http://localhost:8000`.
 
-> ⚠️ Ne double-clique pas sur `index.html` (adresse `file://`) : le navigateur bloque le chargement des fichiers JSON. Utilise un serveur local, l'extension **Live Server** de VS Code, ou **GitHub Pages**.
+> ⚠️ N'ouvre pas `index.html` en double-cliquant dessus (`file://`) : le navigateur bloque le chargement des JSON. Utilise un serveur local, l'extension **Live Server** de VS Code ou **GitHub Pages**.
 
 ### Publier avec GitHub Pages
 
-1. Va dans **Settings → Pages**.
-2. Choisis **Deploy from a branch**, la branche `main` et le dossier `/ (root)`.
-3. Le site sera disponible à l'adresse `https://<ton-utilisateur>.github.io/<nom-du-depot>/`.
+1. **Settings → Pages**
+2. **Deploy from a branch**, branche `main`, dossier `/ (root)`
+3. Le site est en ligne sur `https://<ton-utilisateur>.github.io/<nom-du-depot>/`
 
-## 🧩 Structure du projet
+## 🧩 Structure
 
 ```text
 .
-├── index.html                 # Accueil + recherche de joueur
-├── cartes.html                # Deck builder
-├── description_cartes.html    # Fiches des cartes
-├── news.html                  # Nouveautés
-├── e-sport.html               # E-sport
-├── clan_site.html             # Clans
-├── crl.html                   # Clash Royale League
-├── contact.html               # Contact
+├── index.html                  # Accueil + recherche de joueur
+├── cartes.html                 # Deck builder
+├── description_cartes.html     # Fiches des cartes
+├── news.html                   # Nouveautés
+├── e-sport.html                # E-sport
+├── clan_site.html              # Clans
+├── crl.html                    # Clash Royale League
+├── contact.html                # Contact
+│
 ├── css/
-│   ├── style.css              # Styles communs (variables, nav, titres, boutons)
-│   ├── home.css, cards.css, description.css, news.css,
-│   └── esports.css, clans.css, contact.css, recherche.css
+│   ├── style.css               # Design system (variables, en-tête, titres, boutons)
+│   ├── home.css                # Accueil
+│   ├── recherche.css           # Résultats de la recherche de joueur
+│   ├── cards.css               # Deck builder
+│   ├── description.css         # Fiches
+│   ├── news.css                # Nouveautés
+│   ├── esports.css             # E-sport et clans
+│   ├── crl.css                 # Vidéos
+│   ├── contact.css             # Contact
+│   └── clans.css               # Tableau de clans
+│
 ├── js/
-│   ├── nav.js                 # Menu de navigation partagé
-│   ├── database.js            # Chargement de data/cards.json
-│   ├── cards.js               # Deck builder
-│   ├── description.js         # Fiches, recherche et filtres
-│   ├── recherche.js           # Stats d'un joueur (Worker + secours JSON)
-│   └── stats.js               # Affichage de data/player.json
+│   ├── nav.js                  # Menu partagé entre toutes les pages
+│   ├── database.js             # Chargement de data/cards.json
+│   ├── cards.js                # Deck builder
+│   ├── description.js          # Fiches, recherche et filtres
+│   ├── recherche.js            # Stats d'un joueur (Worker + secours JSON)
+│   └── stats.js                # Affichage de data/player.json
+│
 ├── data/
-│   ├── cards.json             # Base de données des cartes
-│   └── player.json            # Profil du joueur (généré automatiquement)
-├── scripts/
-│   └── fetch-player.js        # Récupère le profil via l'API
-├── images/                    # Logos, bannières, illustrations
-├── videos/                    # Vidéos du site
+│   ├── cards.json              # Base de données des cartes
+│   └── player.json             # Profil du joueur (généré automatiquement)
+│
+├── scripts/fetch-player.js     # Récupère le profil via l'API
+├── images/                     # Logos, bannières, illustrations
+├── videos/                     # Vidéos du site
 └── .github/workflows/
-    └── update-cards.yml       # Mise à jour quotidienne de player.json
+    └── update-cards.yml        # Mise à jour quotidienne de player.json
 ```
 
 ## 🔄 Données et automatisation
 
-### Base de cartes
+### Cartes
+`data/cards.json` décrit chaque carte : `id`, nom, variante (`normal`, `evolution`, `hero`, `champion`, `tower`, `temporary`), élixir, rareté, catégorie, image et description en français.
 
-`data/cards.json` contient les cartes avec leur `id`, nom, variante (`normal`, `evolution`, `hero`, `champion`, `tower`, `temporary`), coût en élixir, rareté, catégorie, image et description en français.
-
-Les images des cartes sont chargées depuis le CDN de RoyaleAPI (`cdn.royaleapi.com/static/img/cards-150/`). Pour les héberger toi-même, télécharge le dossier `cards-150` du dépôt [RoyaleAPI/cr-api-assets](https://github.com/RoyaleAPI/cr-api-assets) et adapte `CARD_IMG_BASE` dans `js/database.js`.
+Les images sont chargées depuis le CDN de RoyaleAPI (`cdn.royaleapi.com/static/img/cards-150/`). Pour les héberger toi-même, télécharge le dossier `cards-150` du dépôt [RoyaleAPI/cr-api-assets](https://github.com/RoyaleAPI/cr-api-assets) et change `CARD_IMG_BASE` dans `js/database.js`.
 
 ### Stats du joueur
 
-- **En direct :** `js/recherche.js` interroge un Worker Cloudflare qui appelle l'API officielle de Clash Royale et renvoie le profil et les 20 derniers combats.
-- **Secours :** si le Worker ne répond pas, le site affiche le profil enregistré dans `data/player.json`.
+```text
+Navigateur ──► Worker Cloudflare ──► API Clash Royale
+     │
+     └─ si le Worker ne répond pas ──► data/player.json (profil enregistré)
+```
+
+- **En direct :** `js/recherche.js` interroge un Worker Cloudflare qui renvoie le profil et les 20 derniers combats.
+- **Secours :** si le Worker est injoignable, le profil enregistré dans `data/player.json` s'affiche, sans les combats.
 
 ### Mise à jour automatique
+Le workflow `.github/workflows/update-cards.yml` tourne **chaque jour à 06:00 UTC** (ou à la demande) : il lance `scripts/fetch-player.js`, met à jour `data/player.json`, puis commit et push.
 
-Le workflow `.github/workflows/update-cards.yml` s'exécute **chaque jour à 06:00 UTC** (ou manuellement) :
-
-1. il lance `scripts/fetch-player.js`,
-2. il met à jour `data/player.json`,
-3. il commit et push les changements.
-
-Pour l'activer, ajoute ta clé d'API dans **Settings → Secrets and variables → Actions** sous le nom `CR_API_KEY`. Une clé s'obtient sur le portail développeur [RoyaleAPI](https://docs.royaleapi.com/) (proxy) ou [developer.clashroyale.com](https://developer.clashroyale.com/).
+Ajoute ta clé d'API dans **Settings → Secrets and variables → Actions** sous le nom `CR_API_KEY` ([RoyaleAPI](https://docs.royaleapi.com/) ou [developer.clashroyale.com](https://developer.clashroyale.com/)).
 
 ## 🛠️ Technologies
 
-- **HTML5 sémantique** et **CSS3** (variables, grid, flexbox, `clamp()`, thème sombre doré)
-- **JavaScript natif** (ES2020+, `fetch`, glisser-déposer natif)
-- **Polices :** [Bungee](https://fonts.google.com/specimen/Bungee) et [Nunito](https://fonts.google.com/specimen/Nunito)
-- **Cloudflare Workers** pour le proxy d'API
-- **GitHub Actions** pour la mise à jour des données
+HTML5 sémantique · CSS3 (variables, grid, flexbox, `clamp()`, `backdrop-filter`) · JavaScript natif (`fetch`, glisser-déposer) · Cloudflare Workers · GitHub Actions · GitHub Pages
 
 ## 🧭 Pistes d'amélioration
 
 - [ ] Page Clans avec les vraies données du clan
-- [ ] Héberger localement les images des cartes
+- [ ] Héberger les images des cartes en local
+- [ ] Changement de saison interactif dans les Nouveautés
 - [ ] Copier un deck directement vers le jeu
-- [ ] Section nouveautés interactive (changement de saison)
-- [ ] Mode clair
+- [ ] Comparer deux joueurs
 
 ## 👤 Auteur
 
@@ -168,7 +208,7 @@ Pour l'activer, ajoute ta clé d'API dans **Settings → Secrets and variables �
 
 ## ⚖️ Mentions légales
 
-Ce contenu n'est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell, et Supercell n'est pas responsable de ce contenu. Pour plus d'informations, consulte la [politique relative au contenu des fans](https://supercell.com/en/fan-content-policy/) de Supercell. Clash Royale est une marque de Supercell.
+Ce contenu n'est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell, et Supercell n'est pas responsable de ce contenu. Voir la [politique relative au contenu des fans](https://supercell.com/en/fan-content-policy/). Clash Royale est une marque de Supercell.
 
 ---
 
