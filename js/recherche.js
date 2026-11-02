@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (oppCards.length) {
         oppCards.forEach((c) => oppGrid.append(miniCardEl(c)));
       } else {
-        oppGrid.append(el("p", "cr-message", "L'API n'a pas renvoyé le deck adverse pour ce combat."));
+        oppGrid.append(el("p", "cr-message", "L'API n'a pas renvoyé le deck adverse pour ce combat (souvent le cas sur les combats très anciens ou les modes spéciaux)."));
       }
       oppDeck.append(oppGrid);
       detail.append(oppDeck);

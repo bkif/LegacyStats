@@ -49,12 +49,19 @@ export default {
     const battles = log.slice(0, 20).map((b) => {
       const me = b.team?.[0] ?? {};
       const opp = b.opponent?.[0] ?? {};
+      
       const crowns = me.crowns ?? 0;
       const oppCrowns = opp.crowns ?? 0;
 
-      // 🛡️ Sécurité : on cherche les cartes à plusieurs endroits possibles selon l'API
-      const myCardsRaw = me.cards || me.deck || me.team?.[0]?.cards || [];
-      const oppCardsRaw = opp.cards || opp.deck || opp.team?.[0]?.cards || [];
+      // 🛡️ Extraction ultra-robuste des cartes adverses
+      // On fouille dans opp.cards, opp.deck, opp.team[0].cards ET on gère le cas 2v2
+      let oppCardsRaw = [];
+      if (b.opponent && Array.isArray(b.opponent)) {
+          // Si c'est un combat 2v2, on récupère les cartes de TOUS les adversaires
+          oppCardsRaw = b.opponent.flatMap(o => o.cards || o.deck || o.team?.[0]?.cards || []);
+      } else if (b.opponent) {
+          oppCardsRaw = b.opponent.cards || b.opponent.deck || [];
+      }
 
       return {
         result: crowns > oppCrowns ? "win" : crowns < oppCrowns ? "loss" : "draw",
@@ -62,7 +69,7 @@ export default {
         oppCrowns,
         time: isoTime(b.battleTime),
         opponents: (b.opponent || []).map((o) => o.name),
-        cards: myCardsRaw.map(mapCard),
+        cards: (me.cards || me.deck || []).map(mapCard),
         oppCards: oppCardsRaw.map(mapCard),
       };
     });
