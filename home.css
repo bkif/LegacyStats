@@ -1,0 +1,18 @@
+/* ===== Accueil ===== */
+.hero { position: relative; overflow: hidden; padding: 76px 16px 64px; text-align: center; }
+.hero-in { position: relative; z-index: 1; max-width: 800px; margin: auto; }
+.drop { position: absolute; z-index: 0; width: 110px; height: 110px; border-radius: 0 50% 50% 50%; transform: rotate(45deg); background: radial-gradient(circle at 35% 30%, #ff9bf5, var(--pink) 55%, #8a1d85); border: 4px solid var(--ink); box-shadow: 0 8px 0 rgba(0,0,0,.3); }
+.drop.a { top: 40px; right: max(5%, 20px); }
+.drop.b { bottom: 20px; left: max(4%, 14px); width: 60px; height: 60px; border-width: 3px; }
+.hero h1 { font-size: clamp(2.8rem, 9vw, 5.6rem); -webkit-text-stroke-width: 8px; text-shadow: 0 8px 0 var(--ink), 0 22px 30px rgba(0,0,0,.35); }
+.hero p { margin: 22px auto 30px; max-width: 54ch; color: #fff; font-size: 1.2rem; font-weight: 700; text-shadow: 0 2px 0 rgba(6,19,63,.6); }
+
+#joueur { max-width: 1180px; margin: auto; padding: 8px 16px 24px; }
+
+.qs { max-width: 1180px; margin: auto; padding: 32px 16px 0; }
+.quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 22px; }
+.quick a { display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: var(--radius); background: linear-gradient(#1b3f9f, #10286d); border: 4px solid var(--ink); box-shadow: inset 0 0 0 3px rgba(120,170,255,.3), var(--shadow); text-decoration: none; color: #fff; transition: transform .15s; }
+.quick a:hover { transform: translateY(-4px); color: #fff; }
+.quick .ico { font-size: 2rem; line-height: 1; }
+.quick b { font: 400 1.1rem var(--display); }
+.quick span:last-child { color: var(--mut); font-size: .93rem; line-height: 1.4; font-weight: 700; }
