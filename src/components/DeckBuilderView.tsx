@@ -1,10 +1,12 @@
-import { useState, type DragEvent } from 'react';
+import { useState, useEffect, type DragEvent } from 'react';
 import { Card, CardRarity } from '../types';
-import { INITIAL_CARDS } from '../data/cardsData';
+import { INITIAL_CARDS, fetchOfficialCards } from '../data/cardsData';
 import { CardImage } from './CardImage';
 import { playDropSound, playTapSound, playCrownSound } from '../utils/audio';
 
 export const DeckBuilderView = () => {
+  const [allCards, setAllCards] = useState<Card[]>(INITIAL_CARDS);
+  const [loadingCards, setLoadingCards] = useState<boolean>(false);
   const [deckSlots, setDeckSlots] = useState<(Card | null)[]>([
     INITIAL_CARDS.find(c => c.name === 'Goblin Barrel') || null,
     INITIAL_CARDS.find(c => c.name === 'Valkyrie') || null,
@@ -20,6 +22,23 @@ export const DeckBuilderView = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedRarity, setSelectedRarity] = useState<string>('');
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingCards(true);
+    fetchOfficialCards()
+      .then(cards => {
+        if (cards && cards.length > 0) {
+          setAllCards(cards);
+          // Sync default slots with real API images if matching
+          setDeckSlots(prev => prev.map(slot => {
+            if (!slot) return null;
+            const match = cards.find(c => c.name.toLowerCase() === slot.name.toLowerCase());
+            return match || slot;
+          }));
+        }
+      })
+      .finally(() => setLoadingCards(false));
+  }, []);
 
   const handleCardClick = (card: Card) => {
     const existingIndex = deckSlots.findIndex(s => s && s.name === card.name);
@@ -61,7 +80,7 @@ export const DeckBuilderView = () => {
     const cardId = e.dataTransfer.getData('text/plain');
     if (!cardId) return;
 
-    const found = INITIAL_CARDS.find(c => c.id === cardId);
+    const found = allCards.find(c => String(c.id) === String(cardId));
     if (!found) return;
 
     const next = [...deckSlots];
@@ -78,14 +97,14 @@ export const DeckBuilderView = () => {
 
   const getDeckPace = (avg: number) => {
     if (!avg) return { label: 'Deck incomplet', color: 'text-slate-400' };
-    if (avg < 3.0) return { label: 'Cycle Très Rapide (Pression constante)', color: 'text-emerald-400' };
-    if (avg <= 3.8) return { label: 'Équilibré & Polyvalent (Contrôle / Contre-attaque)', color: 'text-amber-400' };
-    return { label: 'Deck Lourd (Beatdown & Double Élixir)', color: 'text-rose-400' };
+    if (avg < 3.0) return { label: 'Cycle Rapide (Pression)', color: 'text-emerald-400' };
+    if (avg <= 3.8) return { label: 'Équilibré (Polyvalent)', color: 'text-amber-400' };
+    return { label: 'Deck Lourd (Beatdown)', color: 'text-rose-400' };
   };
 
   const deckPace = getDeckPace(avgElixirNum);
 
-  const filteredCards = INITIAL_CARDS.filter(c => {
+  const filteredCards = allCards.filter(c => {
     const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
     const matchesRarity = !selectedRarity || c.rarity === selectedRarity;
     return matchesSearch && matchesRarity;
@@ -98,7 +117,7 @@ export const DeckBuilderView = () => {
 
   const generateRandomDeck = () => {
     playCrownSound();
-    const shuffled = [...INITIAL_CARDS].sort(() => 0.5 - Math.random());
+    const shuffled = [...allCards].sort(() => 0.5 - Math.random());
     setDeckSlots(shuffled.slice(0, 8));
   };
 
@@ -203,7 +222,7 @@ export const DeckBuilderView = () => {
                     <div className="cr-elixir-drop">
                       <span>{card.elixir}</span>
                     </div>
-                    <div className="w-full aspect-[1/1.1] flex items-center justify-center">
+                    <div className="w-full h-12 sm:h-16 flex items-center justify-center p-0.5">
                       <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                     </div>
                     <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 truncate w-full text-center mt-0.5">
@@ -285,6 +304,11 @@ export const DeckBuilderView = () => {
 
       {/* Cards Catalog */}
       <section aria-label="Collection">
+        {loadingCards && (
+          <div className="text-center py-4 text-xs font-bold text-amber-400 animate-pulse">
+            ⚡ Synchronisation du catalogue officiel depuis l'API Supercell ({allCards.length} cartes)…
+          </div>
+        )}
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
           {filteredCards.map(card => {
             const isInDeck = deckSlots.some(s => s && s.name === card.name);
@@ -303,7 +327,7 @@ export const DeckBuilderView = () => {
                 <div className="cr-elixir-drop">
                   <span>{card.elixir}</span>
                 </div>
-                <div className="w-full aspect-[1/1.1] flex items-center justify-center">
+                <div className="w-full h-14 sm:h-20 flex items-center justify-center p-0.5">
                   <CardImage name={card.name} image={card.image} rarity={card.rarity as CardRarity} />
                 </div>
                 <span className="text-[10px] font-bold text-slate-300 block truncate w-full text-center mt-1">

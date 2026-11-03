@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { CardRarity } from '../types';
-import { INITIAL_CARDS } from '../data/cardsData';
+import { useState, useEffect } from 'react';
+import { Card, CardRarity } from '../types';
+import { INITIAL_CARDS, fetchOfficialCards } from '../data/cardsData';
 import { CardImage } from './CardImage';
 import { playTapSound } from '../utils/audio';
 
@@ -15,12 +15,23 @@ const RARITY_META: Record<CardRarity, { label: string; color: string; bg: string
 };
 
 export const CardsDescriptionView = () => {
+  const [allCards, setAllCards] = useState<Card[]>(INITIAL_CARDS);
+  const [loading, setLoading] = useState<boolean>(false);
   const [query, setQuery] = useState<string>('');
   const [rarity, setRarity] = useState<string>('');
   const [elixirFilter, setElixirFilter] = useState<string>('all');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
-  const filteredCards = INITIAL_CARDS.filter(c => {
+  useEffect(() => {
+    setLoading(true);
+    fetchOfficialCards()
+      .then(cards => {
+        if (cards && cards.length > 0) setAllCards(cards);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredCards = allCards.filter(c => {
     const q = !query || c.name.toLowerCase().includes(query.toLowerCase().trim());
     const r = !rarity || c.rarity === rarity;
     let e = true;
@@ -31,7 +42,7 @@ export const CardsDescriptionView = () => {
     return q && r && e;
   });
 
-  const selectedCard = INITIAL_CARDS.find(c => c.id === selectedCardId) || null;
+  const selectedCard = allCards.find(c => String(c.id) === String(selectedCardId) || c.name === selectedCardId) || null;
 
   return (
     <main id="contenu" className="max-w-6xl mx-auto px-4 py-10 w-full flex-1">
@@ -123,6 +134,12 @@ export const CardsDescriptionView = () => {
         </div>
       </div>
 
+      {loading && (
+        <div className="text-center py-3 text-xs font-bold text-amber-400 animate-pulse mb-4">
+          ⚡ Chargement des 123 cartes officielles depuis l'API Supercell…
+        </div>
+      )}
+
       {/* Cards Showcase Grid */}
       <div id="cards-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {filteredCards.length > 0 ? (
@@ -141,7 +158,7 @@ export const CardsDescriptionView = () => {
                 </div>
 
                 {/* Card Artwork */}
-                <div className="w-full aspect-[1/1.1] flex items-center justify-center my-1 sm:my-2">
+                <div className="w-full h-24 sm:h-32 flex items-center justify-center my-1 sm:my-2 p-1">
                   <CardImage name={c.name} image={c.image} rarity={c.rarity} />
                 </div>
 

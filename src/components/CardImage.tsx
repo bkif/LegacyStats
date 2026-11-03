@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getLocalCardImage, createCardSvgFallback } from '../data/cardImages';
 import { CardRarity } from '../types';
 
@@ -31,25 +31,39 @@ export const CardImage = ({
   const color = RARITY_COLORS[rarity] || '#f7c75a';
   const svgFallback = createCardSvgFallback(name, color);
 
-  // Initial source prioritizes provided image or high-res CDN
+  // Initial source prioritizes real API image
   const initialSrc = image || cdnFallback;
   const [src, setSrc] = useState<string>(initialSrc);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [triedProxy, setTriedProxy] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (image && image !== src) {
+      setSrc(image);
+      setTriedProxy(false);
+    }
+  }, [image]);
 
   const handleError = () => {
-    if (!hasError && src !== cdnFallback) {
-      setSrc(cdnFallback);
-      setHasError(true);
-    } else {
-      setSrc(svgFallback);
+    // 1. Try worker image proxy if official URL had issue
+    if (!triedProxy && src && src.startsWith('http') && !src.includes('workers.dev')) {
+      setTriedProxy(true);
+      setSrc(`https://cr-stats.pm00buq.workers.dev?image=${encodeURIComponent(src)}`);
+      return;
     }
+    // 2. Try RoyaleAPI CDN fallback
+    if (src !== cdnFallback) {
+      setSrc(cdnFallback);
+      return;
+    }
+    // 3. Fallback to procedural SVG
+    setSrc(svgFallback);
   };
 
   return (
     <img
       src={src}
       alt={alt || name}
-      className={`max-w-full max-h-full object-contain pointer-events-none select-none transition-transform duration-200 ${className}`}
+      className={`w-full h-full object-contain pointer-events-none select-none transition-transform duration-200 ${className}`}
       loading="lazy"
       onError={handleError}
     />

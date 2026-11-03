@@ -127,3 +127,39 @@ export const INITIAL_CARDS: Card[] = RAW_CARDS.map(c => ({
   localImage: getLocalCardImage(c.name)
 }));
 
+const WORKER_CARDS_URL = "https://cr-stats.pm00buq.workers.dev/cards";
+let cachedApiCards: Card[] | null = null;
+
+export async function fetchOfficialCards(): Promise<Card[]> {
+  if (cachedApiCards && cachedApiCards.length > 0) {
+    return cachedApiCards;
+  }
+  try {
+    const res = await fetch(WORKER_CARDS_URL, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data && Array.isArray(data.cards) && data.cards.length > 0) {
+      cachedApiCards = data.cards.map((c: any) => ({
+        id: String(c.id || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')),
+        name: c.name,
+        elixir: c.elixir ?? 0,
+        rarity: (c.rarity || 'common').toLowerCase() as CardRarity,
+        level: 14,
+        maxLevel: c.maxLevel || 16,
+        image: c.image || getLocalCardImage(c.name),
+        localImage: getLocalCardImage(c.name),
+        evoImage: c.evoImage || null,
+        heroImage: c.heroImage || null,
+        variant: c.evoImage ? 'evo' : 'normal'
+      }));
+      return cachedApiCards || INITIAL_CARDS;
+    }
+  } catch (err) {
+    console.warn("Using fallback cards:", err);
+  }
+  return INITIAL_CARDS;
+}
+
+

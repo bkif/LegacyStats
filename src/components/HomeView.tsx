@@ -351,7 +351,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                   <div className="cr-elixir-drop">
                     <span>{card.elixir || 3}</span>
                   </div>
-                  <div className="w-full aspect-[1/1.1] flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-14 sm:h-20 flex items-center justify-center p-0.5">
                     <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                   </div>
                   <span className="cr-level-badge mt-1">
@@ -384,7 +384,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
               <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3 mt-4 max-h-[450px] overflow-y-auto pr-1">
                 {player.cards.map((c, idx) => (
                   <div key={`coll-${c.id || c.name}-${idx}`} className={`cr-card-frame r-${c.rarity || 'common'} p-1`}>
-                    <div className="w-full aspect-[1/1.1] flex items-center justify-center">
+                    <div className="w-full h-12 sm:h-16 flex items-center justify-center p-0.5">
                       <CardImage name={c.name} image={c.image} rarity={c.rarity} />
                     </div>
                     <span className="cr-level-badge mt-1">
@@ -483,7 +483,9 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                         {myCards.map((card, cIdx) => (
                           <div key={`my-${i}-${cIdx}`} className="text-center group">
                             <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
-                              <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                              <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                              </div>
                             </div>
                             <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
                               {card.name}
@@ -503,7 +505,9 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                           oppCards.map((card, cIdx) => (
                             <div key={`opp-${i}-${cIdx}`} className="text-center group">
                               <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
-                                <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                                <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                  <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                                </div>
                               </div>
                               <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
                                 {card.name}
