@@ -52,18 +52,16 @@ function buildCard(c) {
     article.className = `description-card-box r-${c.rarity || "common"}`;
     article.id = c.id;
 
-    const desc = c.description
-        ? `<p>${c.description}</p>`
-        : `<p class="empty-desc">Description non disponible via l'API.</p>`;
+    const elixirInfo = c.elixir ? `<h2>Élixir<br>${c.elixir}</h2>` : "";
+    const levelInfo = c.level ? `<h2>Niveau<br>${c.level}${c.maxLevel ? ` / ${c.maxLevel}` : ""}</h2>` : "";
 
     article.innerHTML = `
         <h3>${c.name}</h3>
         <img src="${c.image}" alt="${c.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=FALLBACK_IMG">
         <div class="card-stats">
             <h2 style="color:${meta.color}">Rareté<br>${meta.label}</h2>
-            <h2>Type<br>${c.type ?? "—"}</h2>
+            ${elixirInfo || levelInfo}
         </div>
-        ${desc}
     `;
     return article;
 }

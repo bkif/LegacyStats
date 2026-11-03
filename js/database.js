@@ -1,10 +1,12 @@
-// js/database.js — charge data/cards.json (statique, rapide)
-const CARDS_URL = "data/cards.json";
-// Le dossier local cards-150/ n'existe pas : on charge les images depuis le CDN RoyaleAPI
+// js/database.js — charge les cartes depuis data/player.json ou Worker
+const CARDS_URL = "data/player.json";
 const CARD_IMG_BASE = "https://cdn.royaleapi.com/static/img/cards-150/";
 const FALLBACK_IMG = "images/logo_clash_royale.png";
 
 function cardImageUrl(card) {
+    if (card.image && card.image.startsWith("http")) {
+        return card.image;
+    }
     const file = String(card.image || "").split("/").pop();
     return file ? CARD_IMG_BASE + file : FALLBACK_IMG;
 }
@@ -21,7 +23,19 @@ async function loadDatabase() {
             const res = await fetch(CARDS_URL, { cache: "no-cache" });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const raw = await res.json();
-            const cards = (raw.cards ?? raw.items ?? []).map(c => ({ ...c, image: cardImageUrl(c) }));
+            
+            // Récupère les cartes depuis cards, items ou deck
+            const list = raw.cards ?? raw.items ?? raw.deck ?? [];
+            const cards = list.map((c, idx) => ({
+                id: c.id || c.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-") || `card-${idx}`,
+                name: c.name,
+                elixir: c.elixir ?? c.elixirCost ?? 0,
+                rarity: (c.rarity ?? "common").toLowerCase(),
+                image: cardImageUrl(c),
+                level: c.level,
+                maxLevel: c.maxLevel,
+            }));
+
             database = { cards };
             return database;
         } catch (err) {
