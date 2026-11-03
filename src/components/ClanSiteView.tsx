@@ -102,12 +102,12 @@ export const ClanSiteView = () => {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs font-display text-amber-400 tracking-wider">
-                <th className="py-3 px-3">#</th>
-                <th className="py-3 px-3">Joueur</th>
-                <th className="py-3 px-3">Rôle</th>
-                <th className="py-3 px-3 text-right">Trophées</th>
-                <th className="py-3 px-3 text-right">Dons donnés</th>
-                <th className="py-3 px-3 text-right">Dons reçus</th>
+                <th className="py-2.5 sm:py-3 px-2 sm:px-3">#</th>
+                <th className="py-2.5 sm:py-3 px-2 sm:px-3">Joueur</th>
+                <th className="py-2.5 sm:py-3 px-2 sm:px-3">Rôle</th>
+                <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">Trophées</th>
+                <th className="hidden md:table-cell py-2.5 sm:py-3 px-2 sm:px-3 text-right">Dons donnés</th>
+                <th className="hidden md:table-cell py-2.5 sm:py-3 px-2 sm:px-3 text-right">Dons reçus</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -122,29 +122,29 @@ export const ClanSiteView = () => {
                     onClick={() => playTapSound()}
                     className="hover:bg-white/5 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3.5 px-3 font-display text-slate-500 group-hover:text-amber-400">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-3 font-display text-xs sm:text-sm text-slate-500 group-hover:text-amber-400">
                       {m.rank}
                     </td>
-                    <td className="py-3.5 px-3">
-                      <div className="font-extrabold text-white group-hover:text-amber-300 transition-colors">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-3">
+                      <div className="font-extrabold text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate max-w-[120px] sm:max-w-none">
                         {m.name}
                       </div>
-                      <div className="text-[11px] font-mono text-slate-500">
+                      <div className="text-[10px] sm:text-[11px] font-mono text-slate-500">
                         {m.tag} · Niv {m.expLevel}
                       </div>
                     </td>
-                    <td className="py-3.5 px-3">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${roleBadge}`}>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-3">
+                      <span className={`inline-block px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold border ${roleBadge}`}>
                         {m.roleLabel}
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 text-right font-display text-amber-400">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-3 text-right font-display text-xs sm:text-sm text-amber-400 whitespace-nowrap">
                       {m.trophies.toLocaleString('fr-CH')} 🏆
                     </td>
-                    <td className="py-3.5 px-3 text-right font-bold text-slate-200">
+                    <td className="hidden md:table-cell py-2.5 sm:py-3.5 px-2 sm:px-3 text-right font-bold text-slate-200">
                       {m.donations.toLocaleString('fr-CH')}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-bold text-slate-400">
+                    <td className="hidden md:table-cell py-2.5 sm:py-3.5 px-2 sm:px-3 text-right font-bold text-slate-400">
                       {m.donationsReceived.toLocaleString('fr-CH')}
                     </td>
                   </tr>

@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { PlayerProfile, NavTab, Battle, Card } from '../types';
+import { PlayerProfile, NavTab, Battle } from '../types';
 import { DEFAULT_PLAYER } from '../data/playerData';
 import { CardImage } from './CardImage';
 import { getLocalCardImage } from '../data/cardImages';
@@ -19,54 +19,45 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
   const [showCollection, setShowCollection] = useState<boolean>(false);
   const [activeBattleId, setActiveBattleId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch('/data/player.json')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.name) {
-          setPlayer(prev => ({
-            ...prev,
-            ...data,
-            deck: data.deck && data.deck.length ? data.deck.map((c: Card) => ({
-              ...c,
-              image: c.image || getLocalCardImage(c.name),
-              localImage: getLocalCardImage(c.name)
-            })) : prev.deck,
-            battles: data.battles && data.battles.length ? data.battles : prev.battles
-          }));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleSearch = async (tagToSearch: string) => {
-    playTapSound();
+  const fetchPlayerData = async (tagToSearch: string, isInitial = false) => {
     const cleanTag = tagToSearch.trim().replace(/^#/, '').toUpperCase();
     if (!cleanTag) return;
 
+    if (!isInitial) playTapSound();
     setLoading(true);
     setError(null);
 
-    if (cleanTag === 'V9JJGLL0G') {
-      setTimeout(() => {
-        setPlayer(DEFAULT_PLAYER);
-        playCrownSound();
-        setLoading(false);
-      }, 250);
-      return;
-    }
-
     try {
-      const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(cleanTag)}`, { mode: 'cors' });
+      const res = await fetch(`${WORKER_URL}?tag=${encodeURIComponent(cleanTag)}`, {
+        mode: 'cors',
+        headers: { 'Accept': 'application/json' }
+      });
+
       if (!res.ok) {
         throw new Error(`Erreur ${res.status}: Joueur introuvable`);
       }
+
       const data = await res.json();
+
+      if (data && data.reason === 'notFound') {
+        setError(`Joueur #${cleanTag} introuvable sur les serveurs Clash Royale.`);
+        return;
+      }
+
       if (data && data.player) {
         const p = data.player;
+
+        // Ensure 8 cards in deck (merge tower or deckFromBattle if available)
+        let deckList: any[] = p.deck || [];
+        if (deckList.length < 8 && Array.isArray(p.deckFromBattle) && p.deckFromBattle.length >= 8) {
+          deckList = p.deckFromBattle;
+        } else if (deckList.length < 8 && p.tower) {
+          deckList = [...deckList, { ...p.tower, name: p.tower.name || 'Tower Troop', rarity: 'tower' }];
+        }
+
         const normalizedBattles: Battle[] = (data.battles || []).map((b: any, idx: number) => ({
           id: `battle-${idx}`,
-          result: b.result || 'win',
+          result: (b.result === 'win' || b.result === 'loss' || b.result === 'draw') ? b.result : 'win',
           crowns: b.crowns ?? 0,
           oppCrowns: b.oppCrowns ?? 0,
           time: b.time || null,
@@ -84,17 +75,19 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
         }));
 
         setPlayer({
-          name: p.name,
-          tag: p.tag,
+          name: p.name || `Joueur #${cleanTag}`,
+          tag: p.tag || `#${cleanTag}`,
           level: p.level || p.expLevel || 14,
           trophies: p.trophies || 0,
           bestTrophies: p.bestTrophies || p.trophies || 0,
           wins: p.wins || 0,
           losses: p.losses || 0,
           threeCrownWins: p.threeCrownWins || 0,
+          battleCount: p.battleCount || (p.wins + p.losses),
           clan: p.clan || undefined,
           arena: p.arena || undefined,
-          deck: (p.deck || []).map((c: any) => ({
+          favouriteCard: p.favouriteCard || undefined,
+          deck: deckList.map((c: any) => ({
             ...c,
             image: c.image || getLocalCardImage(c.name),
             localImage: getLocalCardImage(c.name)
@@ -106,23 +99,29 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           })),
           battles: normalizedBattles
         });
-        playCrownSound();
+
+        if (!isInitial) playCrownSound();
       } else {
-        throw new Error('Format de données inattendu');
+        throw new Error('Données reçues invalides');
       }
     } catch {
-      const mockCustomPlayer: PlayerProfile = {
-        ...DEFAULT_PLAYER,
-        name: `Joueur ${cleanTag.slice(0, 5)}`,
-        tag: `#${cleanTag}`,
-        trophies: 8500 + Math.floor(Math.random() * 3000),
-        bestTrophies: 9000 + Math.floor(Math.random() * 3000),
-      };
-      setPlayer(mockCustomPlayer);
-      setError(`Notice: Affichage avec profil de simulation pour #${cleanTag}.`);
+      // Fallback to default player if initial, or show error
+      if (isInitial) {
+        setPlayer(DEFAULT_PLAYER);
+      } else {
+        setError(`Impossible de charger le profil #${cleanTag}. Vérifiez la connexion ou le tag.`);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchPlayerData('V9JJGLL0G', true);
+  }, []);
+
+  const handleSearch = (tagToSearch: string) => {
+    fetchPlayerData(tagToSearch, false);
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -226,38 +225,38 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
         )}
 
         {/* Player Profile & Active Deck Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           {/* 1. Player Profile Card (7 cols) */}
-          <div className="lg:col-span-7 bg-slate-900/80 border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden backdrop-blur-md">
+          <div className="lg:col-span-7 bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden backdrop-blur-md">
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
             {/* Profile Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-300 to-amber-600 p-0.5 shadow-lg shadow-amber-500/25">
-                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex flex-col items-center justify-center">
-                    <span className="text-xs text-amber-400 font-bold leading-none">NIV</span>
-                    <span className="text-xl font-display text-white leading-tight">{player.level}</span>
+            <div className="flex items-center gap-3 sm:gap-4 mb-5">
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-b from-amber-300 to-amber-600 p-0.5 shadow-lg shadow-amber-500/25">
+                  <div className="w-full h-full bg-slate-950 rounded-[10px] sm:rounded-[14px] flex flex-col items-center justify-center">
+                    <span className="text-[10px] sm:text-xs text-amber-400 font-bold leading-none">NIV</span>
+                    <span className="text-lg sm:text-xl font-display text-white leading-tight">{player.level}</span>
                   </div>
                 </div>
-                <div className="absolute -top-2 -right-1 text-sm">👑</div>
+                <div className="absolute -top-2 -right-1 text-xs sm:text-sm">👑</div>
               </div>
 
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-2xl sm:text-3xl font-display text-white">{player.name}</h2>
-                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                  <h2 className="text-xl sm:text-3xl font-display text-white truncate max-w-full">{player.name}</h2>
+                  <span className="text-[11px] sm:text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
                     {player.tag}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1 flex-wrap font-bold">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-400 mt-1 flex-wrap font-bold">
                   {player.clan && (
-                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md">
+                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md truncate max-w-[200px]">
                       🛡️ {player.clan}
                     </span>
                   )}
                   {player.arena && (
-                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md">
+                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md truncate max-w-[180px]">
                       🏟️ {player.arena}
                     </span>
                   )}
@@ -266,57 +265,57 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* Stats Cards Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>🏆</span> Trophées
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-2xl font-display text-white">
                   {player.trophies?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>👑</span> Record
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-2xl font-display text-white">
                   {player.bestTrophies?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>⚔️</span> Winrate
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-emerald-400">
+                <div className="text-lg sm:text-2xl font-display text-emerald-400">
                   {winRate}%
                 </div>
               </div>
 
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>✅</span> Victoires
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-2xl font-display text-white">
                   {player.wins?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>❌</span> Défaites
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-2xl font-display text-white">
                   {player.losses?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box">
-                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>🏰</span> 3 Couronnes
                 </div>
-                <div className="text-xl sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-2xl font-display text-white">
                   {player.threeCrownWins?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
@@ -324,29 +323,29 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           </div>
 
           {/* 2. Active Deck Tray (5 cols) */}
-          <div className="lg:col-span-5 bg-slate-900/80 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-md">
+          <div className="lg:col-span-5 bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-display text-white flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-display text-white flex items-center gap-2">
                   <span>🃏</span> Deck Équipé
                 </h3>
-                <span className="text-xs text-slate-400 font-bold">Élixir moyen : <strong className="text-rose-400">{deckAvgElixir} ⚡</strong></span>
+                <span className="text-[11px] sm:text-xs text-slate-400 font-bold">Élixir moyen : <strong className="text-rose-400">{deckAvgElixir} ⚡</strong></span>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('cards')}
                 className="text-xs font-bold text-amber-400 hover:text-amber-300 underline cursor-pointer"
               >
-                Modifier dans le builder →
+                Builder →
               </button>
             </div>
 
             {/* 8 Cards in 4x2 Grid */}
-            <div className="grid grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
               {deckCards.map((card, idx) => (
                 <div
                   key={`${card.id || card.name}-${idx}`}
-                  className={`cr-card-frame r-${card.rarity || 'common'} p-1.5`}
+                  className={`cr-card-frame r-${card.rarity || 'common'} p-1 sm:p-1.5`}
                   title={`${card.name} (Niv ${card.level ?? '?'})`}
                 >
                   <div className="cr-elixir-drop">
@@ -366,25 +365,25 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
 
         {/* 3. Toggleable Cards Collection */}
         {player.cards && player.cards.length > 0 && (
-          <div className="bg-slate-900/70 border border-white/10 rounded-3xl p-6 shadow-xl">
+          <div className="bg-slate-900/70 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-display text-white">Collection de Cartes Débloquées</h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">{player.cards.length} cartes disponibles</p>
+                <h3 className="text-base sm:text-lg font-display text-white">Collection de Cartes</h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-bold mt-0.5">{player.cards.length} cartes débloquées</p>
               </div>
               <button
                 type="button"
                 onClick={() => { playTapSound(); setShowCollection(!showCollection); }}
-                className="cr-btn-secondary text-xs"
+                className="cr-btn-secondary text-[11px] sm:text-xs !py-1.5 !px-3"
               >
-                {showCollection ? 'Masquer la collection ▲' : 'Afficher la collection ▼'}
+                {showCollection ? 'Masquer ▲' : 'Afficher ▼'}
               </button>
             </div>
 
             {showCollection && (
-              <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-3 mt-6 max-h-[500px] overflow-y-auto pr-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3 mt-4 max-h-[450px] overflow-y-auto pr-1">
                 {player.cards.map((c, idx) => (
-                  <div key={`coll-${c.id || c.name}-${idx}`} className={`cr-card-frame r-${c.rarity || 'common'} p-1.5`}>
+                  <div key={`coll-${c.id || c.name}-${idx}`} className={`cr-card-frame r-${c.rarity || 'common'} p-1`}>
                     <div className="w-full aspect-[1/1.1] flex items-center justify-center">
                       <CardImage name={c.name} image={c.image} rarity={c.rarity} />
                     </div>
@@ -399,13 +398,13 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
         )}
 
         {/* 4. Recent Battles Stream (20 derniers combats) */}
-        <div className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-md">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
             <div>
-              <h3 className="text-xl font-display text-white flex items-center gap-2">
+              <h3 className="text-lg sm:text-xl font-display text-white flex items-center gap-2">
                 <span>⚔️</span> 20 Derniers Combats
               </h3>
-              <div className="flex items-center gap-4 text-xs font-bold mt-1">
+              <div className="flex items-center gap-3 text-xs font-bold mt-1">
                 <span className="text-emerald-400">🏆 {winsCount} Victoires</span>
                 <span className="text-rose-400">❌ {lossCount} Défaites</span>
                 {drawCount > 0 && <span className="text-amber-400">🤝 {drawCount} Nuls</span>}
@@ -413,7 +412,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* Quick jump badges */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1 max-w-full overflow-x-auto pb-1">
               {battles.map((b, i) => {
                 const isW = b.result === 'win';
                 const isL = b.result === 'loss';
@@ -427,7 +426,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       setActiveBattleId(`match-${i}`);
                       document.getElementById(`match-${i}`)?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className={`w-7 h-7 rounded-lg border font-display text-xs flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${bg}`}
+                    className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg border font-display text-[10px] sm:text-xs flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${bg}`}
                     title={`Match ${i + 1} (${b.crowns}-${b.oppCrowns})`}
                   >
                     {isW ? 'W' : isL ? 'L' : 'D'}
@@ -438,7 +437,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           </div>
 
           {/* Battles List */}
-          <div className="space-y-4 mt-6">
+          <div className="space-y-3 sm:space-y-4 mt-5">
             {battles.map((b, i) => {
               const isWin = b.result === 'win';
               const isLoss = b.result === 'loss';
@@ -451,42 +450,42 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                 <article
                   key={`match-${i}`}
                   id={`match-${i}`}
-                  className={`cr-match-card ${resultClass} ${activeBattleId === `match-${i}` ? 'ring-2 ring-amber-400' : ''}`}
+                  className={`cr-match-card ${resultClass} ${activeBattleId === `match-${i}` ? 'ring-2 ring-amber-400' : ''} p-3.5 sm:p-5 rounded-xl sm:rounded-2xl`}
                 >
                   {/* Match Header */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3 mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2.5 py-1 rounded-md font-display text-xs ${badgeColor}`}>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-white/5 pb-2.5 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`px-2 py-0.5 rounded-md font-display text-[10px] sm:text-xs ${badgeColor}`}>
                         {isWin ? 'VICTOIRE' : isLoss ? 'DÉFAITE' : 'ÉGALITÉ'}
                       </span>
-                      <span className="font-display text-lg text-white">
+                      <span className="font-display text-base sm:text-lg text-white">
                         {b.crowns} - {b.oppCrowns} 👑
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-extrabold text-amber-400">{player.name}</span>
-                      <span className="text-xs text-slate-500 font-bold">VS</span>
-                      <span className="font-extrabold text-slate-200">{b.opponents.join(' & ') || 'Adversaire'}</span>
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
+                      <span className="font-extrabold text-amber-400 truncate max-w-[130px] sm:max-w-none">{player.name}</span>
+                      <span className="text-[10px] sm:text-xs text-slate-500 font-bold">VS</span>
+                      <span className="font-extrabold text-slate-200 truncate max-w-[130px] sm:max-w-none">{b.opponents.join(' & ') || 'Adversaire'}</span>
                     </div>
 
-                    <time className="text-xs text-slate-400 font-bold">{formatDate(b.time)}</time>
+                    <time className="text-[10px] sm:text-xs text-slate-400 font-bold">{formatDate(b.time)}</time>
                   </div>
 
                   {/* Matchup Comparison (Mon Deck vs Deck Adverse) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Mon Deck */}
-                    <div className="bg-slate-950/60 p-3 rounded-2xl border border-white/5">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-2">
+                    <div className="bg-slate-950/60 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-white/5">
+                      <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1.5">
                         Mon Deck
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                         {myCards.map((card, cIdx) => (
                           <div key={`my-${i}-${cIdx}`} className="text-center group">
-                            <div className={`cr-card-frame r-${card.rarity || 'common'} p-1`}>
+                            <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
                               <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                             </div>
-                            <span className="text-[10px] font-bold text-slate-400 block mt-1 truncate">
+                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
                               {card.name}
                             </span>
                           </div>
@@ -495,24 +494,24 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                     </div>
 
                     {/* Deck Adverse */}
-                    <div className="bg-slate-950/60 p-3 rounded-2xl border border-white/5">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    <div className="bg-slate-950/60 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-white/5">
+                      <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                         Deck Adverse
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                         {oppCards.length > 0 ? (
                           oppCards.map((card, cIdx) => (
                             <div key={`opp-${i}-${cIdx}`} className="text-center group">
-                              <div className={`cr-card-frame r-${card.rarity || 'common'} p-1`}>
+                              <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
                                 <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                               </div>
-                              <span className="text-[10px] font-bold text-slate-400 block mt-1 truncate">
+                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
                                 {card.name}
                               </span>
                             </div>
                           ))
                         ) : (
-                          <div className="col-span-4 text-center py-6 text-xs text-slate-500 font-bold">
+                          <div className="col-span-4 text-center py-5 text-xs text-slate-500 font-bold">
                             Deck adverse non enregistré
                           </div>
                         )}

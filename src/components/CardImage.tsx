@@ -49,7 +49,7 @@ export const CardImage = ({
     <img
       src={src}
       alt={alt || name}
-      className={`transition-transform duration-200 ${className}`}
+      className={`max-w-full max-h-full object-contain pointer-events-none select-none transition-transform duration-200 ${className}`}
       loading="lazy"
       onError={handleError}
     />

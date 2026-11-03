@@ -124,7 +124,7 @@ export const CardsDescriptionView = () => {
       </div>
 
       {/* Cards Showcase Grid */}
-      <div id="cards-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div id="cards-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {filteredCards.length > 0 ? (
           filteredCards.map(c => {
             const meta = RARITY_META[c.rarity] || { label: c.rarity, color: '#fff', bg: 'bg-slate-800' };
@@ -133,7 +133,7 @@ export const CardsDescriptionView = () => {
                 key={c.id}
                 id={c.id}
                 onClick={() => { playTapSound(); setSelectedCardId(c.id); }}
-                className={`cr-card-frame r-${c.rarity || 'common'} p-4 cursor-pointer text-center group`}
+                className={`cr-card-frame r-${c.rarity || 'common'} p-2.5 sm:p-4 cursor-pointer text-center group`}
               >
                 {/* Elixir Drop */}
                 <div className="cr-elixir-drop">
@@ -141,7 +141,7 @@ export const CardsDescriptionView = () => {
                 </div>
 
                 {/* Card Artwork */}
-                <div className="w-full aspect-[1/1.1] flex items-center justify-center my-2">
+                <div className="w-full aspect-[1/1.1] flex items-center justify-center my-1 sm:my-2">
                   <CardImage name={c.name} image={c.image} rarity={c.rarity} />
                 </div>
 

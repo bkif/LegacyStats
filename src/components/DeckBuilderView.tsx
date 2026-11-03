@@ -132,20 +132,20 @@ export const DeckBuilderView = () => {
       </div>
 
       {/* Royal Battle Deck Tray */}
-      <section aria-label="Deck" className="cr-deck-tray max-w-3xl mx-auto mb-10">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3 mb-5">
+      <section aria-label="Deck" className="cr-deck-tray max-w-3xl mx-auto mb-8 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">👑</span>
-            <span className="font-display text-white text-base tracking-wide">
+            <span className="font-display text-white text-sm sm:text-base tracking-wide">
               BATTLE DECK ({activeCards.length} / 8)
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={generateRandomDeck}
-              className="cr-btn-secondary text-xs"
+              className="cr-btn-secondary text-[11px] sm:text-xs !py-1.5 !px-2.5"
               title="Générer une composition aléatoire"
             >
               🎲 Aléatoire
@@ -153,7 +153,7 @@ export const DeckBuilderView = () => {
             <button
               type="button"
               onClick={clearAll}
-              className="cr-btn-secondary text-xs text-rose-300 hover:text-rose-200"
+              className="cr-btn-secondary text-[11px] sm:text-xs !py-1.5 !px-2.5 text-rose-300 hover:text-rose-200"
             >
               🗑️ Vider
             </button>
@@ -161,7 +161,7 @@ export const DeckBuilderView = () => {
               type="button"
               onClick={copyDeck}
               disabled={activeCards.length === 0}
-              className="cr-btn-primary text-xs !py-2 !px-3"
+              className="cr-btn-primary text-[11px] sm:text-xs !py-1.5 !px-3"
             >
               📋 Copier
             </button>
@@ -169,13 +169,13 @@ export const DeckBuilderView = () => {
         </div>
 
         {copyNotice && (
-          <div className="text-xs text-center font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 rounded-xl p-2.5 mb-4 animate-fade-in">
+          <div className="text-xs text-center font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 rounded-xl p-2 mb-3 animate-fade-in">
             {copyNotice}
           </div>
         )}
 
         {/* 8 Slots in 2 rows of 4 */}
-        <div className="grid grid-cols-4 gap-3 sm:gap-4 mb-5">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-3 mb-4">
           {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
             const card = deckSlots[i];
             const isDragOver = dragOverIndex === i;
@@ -199,24 +199,24 @@ export const DeckBuilderView = () => {
                 }}
               >
                 {card ? (
-                  <div className="w-full h-full p-1.5 flex flex-col items-center justify-center relative group">
+                  <div className="w-full h-full p-1 flex flex-col items-center justify-center relative group">
                     <div className="cr-elixir-drop">
                       <span>{card.elixir}</span>
                     </div>
                     <div className="w-full aspect-[1/1.1] flex items-center justify-center">
                       <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-300 truncate w-full text-center mt-0.5">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 truncate w-full text-center mt-0.5">
                       {card.name}
                     </span>
-                    <span className="absolute inset-0 bg-red-950/80 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-black text-rose-300 transition-opacity">
+                    <span className="absolute inset-0 bg-red-950/80 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] sm:text-xs font-black text-rose-300 transition-opacity">
                       ✕ Retirer
                     </span>
                   </div>
                 ) : (
-                  <div className="text-center p-2 text-slate-600 select-none">
-                    <div className="text-xl opacity-30">+</div>
-                    <span className="text-[11px] font-bold block mt-0.5 opacity-40">Emplacement {i + 1}</span>
+                  <div className="text-center p-1 sm:p-2 text-slate-600 select-none">
+                    <div className="text-base sm:text-xl opacity-30">+</div>
+                    <span className="text-[9px] sm:text-[11px] font-bold block mt-0.5 opacity-40">Slot {i + 1}</span>
                   </div>
                 )}
               </div>
@@ -225,42 +225,42 @@ export const DeckBuilderView = () => {
         </div>
 
         {/* Elixir Analytics Indicator */}
-        <div className="bg-slate-950/80 rounded-2xl p-4 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="bg-slate-950/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
-              <span className="text-xl">⚡</span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md shrink-0">
+              <span className="text-lg sm:text-xl">⚡</span>
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+              <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">
                 Coût Moyen en Élixir
               </div>
-              <div className="text-xl font-display text-white">
+              <div className="text-lg sm:text-xl font-display text-white">
                 {avgElixir ? `${avgElixir} Élixir` : '—'}
               </div>
             </div>
           </div>
 
-          <div className="text-right sm:text-right text-center">
+          <div className="text-center sm:text-right">
             <span className={`text-xs font-bold ${deckPace.color}`}>
               {deckPace.label}
             </span>
-            <div className="text-[11px] text-slate-400 font-medium">
-              Glisse une carte ou clique dessus pour ajouter / retirer
+            <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5">
+              💡 Touche ou clique sur une carte pour l'ajouter / retirer
             </div>
           </div>
         </div>
       </section>
 
       {/* Catalog Filter Controls */}
-      <div className="bg-slate-900/60 p-4 rounded-2xl border border-white/5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-white/5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Rarity selector buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {rarities.map(r => (
             <button
               key={r.id}
               type="button"
               onClick={() => { playTapSound(); setSelectedRarity(r.id); }}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-lg sm:rounded-xl font-bold text-xs whitespace-nowrap transition-colors cursor-pointer ${
                 selectedRarity === r.id
                   ? 'bg-amber-400 text-slate-950 shadow-md font-black'
                   : 'bg-white/5 text-slate-300 hover:bg-white/10'
@@ -285,7 +285,7 @@ export const DeckBuilderView = () => {
 
       {/* Cards Catalog */}
       <section aria-label="Collection">
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
           {filteredCards.map(card => {
             const isInDeck = deckSlots.some(s => s && s.name === card.name);
             return (

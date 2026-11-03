@@ -226,38 +226,56 @@ h1, h2, h3, h4, h5 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 14px;
+  border-radius: 12px;
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid #334155;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  border: 1.5px solid #334155;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   overflow: hidden;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .cr-card-frame {
+    border-radius: 14px;
+    border-width: 2px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.cr-card-frame img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .cr-card-frame:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.65);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.65);
 }
 
 /* Rarity Rims */
 .cr-card-frame.r-common {
   border-color: #64748b;
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.3);
 }
 
 .cr-card-frame.r-rare {
   border-color: #f59e0b;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
 }
 
 .cr-card-frame.r-epic {
   border-color: #c026d3;
-  box-shadow: 0 4px 16px rgba(192, 38, 211, 0.4);
+  box-shadow: 0 3px 14px rgba(192, 38, 211, 0.4);
 }
 
 .cr-card-frame.r-legendary {
   border-color: #2dd4bf;
-  box-shadow: 0 0 18px rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.45);
   animation: legendarySheen 4s ease-in-out infinite alternate;
 }
 
@@ -270,34 +288,50 @@ h1, h2, h3, h4, h5 {
 .cr-card-frame.r-champion,
 .cr-card-frame.r-hero {
   border-color: #f5c438;
-  box-shadow: 0 0 20px rgba(245, 196, 56, 0.5);
+  box-shadow: 0 0 16px rgba(245, 196, 56, 0.5);
 }
 
 /* Elixir Droplet Badge */
 .cr-elixir-drop {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50% 50% 50% 4px;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 3px;
   transform: rotate(-45deg);
   background: linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #9f1239 100%);
-  border: 1.5px solid #fff;
+  border: 1px solid #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
   z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .cr-elixir-drop {
+    top: 4px;
+    left: 4px;
+    width: 24px;
+    height: 24px;
+    border-width: 1.5px;
+  }
 }
 
 .cr-elixir-drop span {
   transform: rotate(45deg);
   font-family: var(--font-display);
-  font-size: 0.78rem;
+  font-size: 0.6rem;
   color: #fff;
   font-weight: 900;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+@media (min-width: 640px) {
+  .cr-elixir-drop span {
+    font-size: 0.74rem;
+  }
 }
 
 /* Level Shield Badge */
@@ -305,15 +339,27 @@ h1, h2, h3, h4, h5 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
+  padding: 1px 5px;
   background: linear-gradient(180deg, #1e293b 0%, #0a0f1d 100%);
   border: 1px solid rgba(245, 196, 56, 0.6);
   border-radius: 999px;
   color: #fde047;
   font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  font-size: 0.6rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  .cr-level-badge {
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+  }
 }
 
 /* =========================================================
