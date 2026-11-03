@@ -42,7 +42,7 @@
     const isEvo = card.variant === "evo";
     const fallbackSvg = cardFallback(card.name, card.rarity === "legendary" ? "#71f0d0" : card.rarity === "epic" ? "#d28dfd" : "#f7c75a");
     const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(card.name) : fallbackSvg;
-    const imageSrc = card.image ? imageProxyUrl(card.image) : fallback;
+    const imageSrc = card.image ? imageProxyUrl(card.image) : localImg;
     const img = `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">`;
     const classes = ["cr-tile", `cr-r-${card.rarity || 'common'}`];
     if (isMax) classes.push("max");
@@ -91,66 +91,61 @@
         <div class="cr-deckgrid">${player.deck.map(cardTile).join("")}</div>
       </section>` : `<section class="cr-card"><p class="cr-message">Deck indisponible.</p></section>`;
 
-    // 3. Combats
+    // Calcul des victoires, défaites et nuls
+    const winsCount = battles.filter(b => b.result === "win").length;
+    const lossCount = battles.filter(b => b.result === "loss").length;
+    const drawCount = battles.filter(b => b.result === "draw").length;
+
+    // 3. Combats listés directement sans devoir cliquer
+    const battlesListHtml = battles.length ? battles.map((b) => {
+      const isWin = b.result === "win";
+      const isLoss = b.result === "loss";
+      const resLabel = isWin ? "Victoire" : isLoss ? "Défaite" : "Égalité";
+      const resBadge = isWin ? "V" : isLoss ? "D" : "N";
+      const oppCards = (b.oppCards || []).map(c => {
+        const fallbackSvg = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
+        const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : fallbackSvg;
+        const imageSrc = c.image ? imageProxyUrl(c.image) : localImg;
+        return `
+          <div class="bd-card" title="${esc(c.name)}">
+            <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">
+            <span class="bd-card-name">${esc(c.name)}</span>
+            <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
+          </div>`;
+      }).join("");
+
+      return `
+        <article class="cr-battle-item cr-battle-${b.result}">
+          <div class="bd-head">
+            <span class="bd-result ${b.result}">${resBadge}</span>
+            <div class="bd-info">
+              <h4>${resLabel} · ${b.crowns} - ${b.oppCrowns} 👑</h4>
+              <p>Contre <strong>${esc(b.opponents.join(' & ') || 'Adversaire')}</strong>${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}</p>
+            </div>
+          </div>
+          ${oppCards ? `<div class="bd-deck"><h5>Deck adverse</h5><div class="bd-cards">${oppCards}</div></div>` : ""}
+        </article>`;
+    }).join("") : '<p class="cr-message">Aucun combat récent trouvé.</p>';
+
     const battlesHtml = `
       <section class="cr-card">
         <div class="cr-sectionhead">
-          <h2 class="cr-title">20 derniers combats</h2>
-          <span class="cr-chip">${battles.length} parties</span>
+          <div>
+            <h2 class="cr-title">20 derniers combats</h2>
+            <div class="cr-battle-score">
+              <span class="score-w">🏆 ${winsCount} Victoires</span>
+              <span class="score-l">❌ ${lossCount} Défaites</span>
+              ${drawCount ? `<span class="score-d">🤝 ${drawCount} Nuls</span>` : ""}
+            </div>
+          </div>
+          <span class="cr-chip">${battles.length} combats analysés</span>
         </div>
-        <div class="cr-form20">
-          ${battles.map((b, i) => {
-            const perfect = b.result === "win" && b.crowns === 3 && b.oppCrowns === 0;
-            const letter = b.result === "win" ? "V" : b.result === "loss" ? "D" : "N";
-            return `<button type="button" class="cr-bt cr-bt-${b.result}${perfect ? " cr-bt-perfect" : ""}" data-idx="${i}" aria-pressed="false">
-              <b>${letter}</b><small>${b.crowns}-${b.oppCrowns}</small>
-            </button>`;
-          }).join("")}
+        <div class="cr-battles-stream">
+          ${battlesListHtml}
         </div>
-        <div class="cr-detail" id="battle-detail" hidden></div>
       </section>`;
 
     out.innerHTML = profileHtml + deckHtml + battlesHtml;
-
-    // Gestion du clic sur les combats
-    const detailBox = document.getElementById("battle-detail");
-    const buttons = out.querySelectorAll(".cr-bt");
-
-    buttons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        buttons.forEach(b => b.setAttribute("aria-pressed", "false"));
-        btn.setAttribute("aria-pressed", "true");
-
-        const b = battles[parseInt(btn.dataset.idx)];
-        const oppCards = (b.oppCards || []).map(c => {
-          const fallbackSvg = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
-          const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : fallbackSvg;
-          const imageSrc = c.image ? imageProxyUrl(c.image) : fallback;
-          return `
-            <div class="bd-card">
-              <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">
-              <span class="bd-card-name">${esc(c.name)}</span>
-              <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
-            </div>
-          `;
-        }).join("");
-
-        detailBox.innerHTML = `
-          <div class="bd-head">
-            <span class="bd-result ${b.result}">${b.result === "win" ? "V" : b.result === "loss" ? "D" : "N"}</span>
-            <div class="bd-info">
-              <h4>${b.result === "win" ? "Victoire" : b.result === "loss" ? "Défaite" : "Égalité"} ${b.crowns} - ${b.oppCrowns} 👑</h4>
-              <p>Contre ${esc(b.opponents.join(' & ') || 'Inconnu')} ${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}</p>
-            </div>
-          </div>
-          <div class="bd-deck">
-            <h5>Deck adverse</h5>
-            <div class="bd-cards">${oppCards || '<div class="cr-empty">Données adverses indisponibles.</div>'}</div>
-          </div>
-        `;
-        detailBox.hidden = false;
-      });
-    });
   }
 
   async function loadFallbackData(tag) {
