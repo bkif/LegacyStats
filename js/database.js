@@ -1,14 +1,20 @@
 // js/database.js — charge les cartes depuis data/player.json ou Worker
 const CARDS_URL = "data/player.json";
+const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
 const CARD_IMG_BASE = "https://cdn.royaleapi.com/static/img/cards-150/";
 const FALLBACK_IMG = "images/logo_clash_royale.png";
 
+function proxyUrl(url) {
+    if (!url) return FALLBACK_IMG;
+    return `${WORKER_URL}?image=${encodeURIComponent(url)}`;
+}
+
 function cardImageUrl(card) {
     if (card.image && card.image.startsWith("http")) {
-        return card.image;
+        return proxyUrl(card.image);
     }
     const file = String(card.image || "").split("/").pop();
-    return file ? CARD_IMG_BASE + file : FALLBACK_IMG;
+    return file ? proxyUrl(CARD_IMG_BASE + file) : FALLBACK_IMG;
 }
 
 let database = null;

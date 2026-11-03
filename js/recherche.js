@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+﻿document.addEventListener("DOMContentLoaded", function () {
   // 👇 TON URL DE WORKER CLOUDFLARE EST ICI 👇
   const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
   const DEFAULT_TAG = "V9JJGLL0G";
@@ -9,7 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!form || !input || !out) return;
 
   function imageProxyUrl(src) {
-    return src || "";
+    if (!src) return '';
+    return `${WORKER_URL}?image=${encodeURIComponent(src)}`;
   }
 
   form.addEventListener("submit", function (e) {
@@ -40,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const isMax = card.maxed;
     const isEvo = card.variant === "evo";
     const fallback = cardFallback(card.name, card.rarity === "legendary" ? "#71f0d0" : card.rarity === "epic" ? "#d28dfd" : "#f7c75a");
-    const imageSrc = fallback;
+    const imageSrc = card.image ? imageProxyUrl(card.image) : fallback;
     const img = `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">`;
     const classes = ["cr-tile", `cr-r-${card.rarity || 'common'}`];
     if (isMax) classes.push("max");
@@ -122,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const b = battles[parseInt(btn.dataset.idx)];
         const oppCards = (b.oppCards || []).map(c => {
           const fallback = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
-          const imageSrc = fallback;
+          const imageSrc = c.image ? imageProxyUrl(c.image) : fallback;
           return `
             <div class="bd-card">
               <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
@@ -222,3 +223,4 @@ document.addEventListener("DOMContentLoaded", function () {
   input.value = "#" + DEFAULT_TAG;
   search(DEFAULT_TAG);
 });
+
