@@ -466,3 +466,33 @@ button.btn:hover { transform: translateY(-2px); }
   margin-bottom: 4px;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
 }
+
+/* Style du double deck (Moi vs Adversaire) et badges */
+.cr-battle-decks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+@media (max-width: 640px) {
+  .cr-battle-decks {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+.cr-deck-side {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.cr-deck-side h5 {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.cr-bt {
+  text-decoration: none;
+}

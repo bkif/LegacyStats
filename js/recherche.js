@@ -96,13 +96,10 @@
     const lossCount = battles.filter(b => b.result === "loss").length;
     const drawCount = battles.filter(b => b.result === "draw").length;
 
-    // 3. Combats listés directement sans devoir cliquer
-    const battlesListHtml = battles.length ? battles.map((b) => {
-      const isWin = b.result === "win";
-      const isLoss = b.result === "loss";
-      const resLabel = isWin ? "Victoire" : isLoss ? "Défaite" : "Égalité";
-      const resBadge = isWin ? "V" : isLoss ? "D" : "N";
-      const oppCards = (b.oppCards || []).map(c => {
+    // Helper pour générer la grille de cartes d'un deck (joueur ou adversaire)
+    function renderMiniDeck(cardsList) {
+      if (!cardsList || !cardsList.length) return '<div class="cr-empty">Deck indisponible</div>';
+      return cardsList.map(c => {
         const fallbackSvg = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
         const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : fallbackSvg;
         const imageSrc = c.image ? imageProxyUrl(c.image) : localImg;
@@ -113,9 +110,31 @@
             <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
           </div>`;
       }).join("");
+    }
+
+    // 1. Petits badges récapitulatifs cliquables / repères visuels
+    const badgesHtml = `
+      <div class="cr-form20">
+        ${battles.map((b, i) => {
+          const perfect = b.result === "win" && b.crowns === 3 && b.oppCrowns === 0;
+          const letter = b.result === "win" ? "V" : b.result === "loss" ? "D" : "N";
+          return `<a href="#battle-${i}" class="cr-bt cr-bt-${b.result}${perfect ? " cr-bt-perfect" : ""}" title="Combat ${i+1} : ${letter} ${b.crowns}-${b.oppCrowns}">
+            <b>${letter}</b><small>${b.crowns}-${b.oppCrowns}</small>
+          </a>`;
+        }).join("")}
+      </div>`;
+
+    // 2. Liste complète des combats avec double deck (Mon deck + Deck adverse)
+    const battlesListHtml = battles.length ? battles.map((b, i) => {
+      const isWin = b.result === "win";
+      const isLoss = b.result === "loss";
+      const resLabel = isWin ? "Victoire" : isLoss ? "Défaite" : "Égalité";
+      const resBadge = isWin ? "V" : isLoss ? "D" : "N";
+      const myCards = renderMiniDeck(b.cards && b.cards.length ? b.cards : player.deck);
+      const oppCards = renderMiniDeck(b.oppCards);
 
       return `
-        <article class="cr-battle-item cr-battle-${b.result}">
+        <article class="cr-battle-item cr-battle-${b.result}" id="battle-${i}">
           <div class="bd-head">
             <span class="bd-result ${b.result}">${resBadge}</span>
             <div class="bd-info">
@@ -123,7 +142,17 @@
               <p>Contre <strong>${esc(b.opponents.join(' & ') || 'Adversaire')}</strong>${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}</p>
             </div>
           </div>
-          ${oppCards ? `<div class="bd-deck"><h5>Deck adverse</h5><div class="bd-cards">${oppCards}</div></div>` : ""}
+
+          <div class="cr-battle-decks">
+            <div class="cr-deck-side">
+              <h5>Mon Deck</h5>
+              <div class="bd-cards">${myCards}</div>
+            </div>
+            <div class="cr-deck-side">
+              <h5>Deck Adverse</h5>
+              <div class="bd-cards">${oppCards}</div>
+            </div>
+          </div>
         </article>`;
     }).join("") : '<p class="cr-message">Aucun combat récent trouvé.</p>';
 
@@ -140,6 +169,7 @@
           </div>
           <span class="cr-chip">${battles.length} combats analysés</span>
         </div>
+        ${badgesHtml}
         <div class="cr-battles-stream">
           ${battlesListHtml}
         </div>
