@@ -1,119 +1,266 @@
-const API = "https://proxy.royaleapi.dev/v1";
+const ALLOWED_ORIGIN = "*";
+const API_PLAYERS = "https://proxy.royaleapi.dev/v1/players/";
+const API_CARDS = "https://proxy.royaleapi.dev/v1/cards";
 
-function corsHeaders(request) {
-  const origin = request.headers.get("Origin") || "";
-  const allowed = origin && /(localhost|127\.0\.0\.1|bkif\.github\.io|github\.io)/.test(origin) ? origin : "*";
-
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Content-Type": "application/json; charset=utf-8",
-  };
+function reply(body, status, cors, extra = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json; charset=utf-8", ...extra },
+  });
 }
 
-const mapCard = (c) => ({
-  name: c.name,
-  level: c.level,
-  maxLevel: c.maxLevel,
-  rarity: c.rarity,
-  elixir: c.elixirCost,
-  count: c.count,
-  variant: c.evolutionLevel > 0 ? "evo" : "normal",
-  image: c.iconUrls?.medium,
-  evoImage: c.iconUrls?.evolutionMedium,
-  heroImage: c.iconUrls?.heroMedium,
-});
+// niveau affiché dans le jeu (max 16)
+const lvl = (c) => (c.level ?? 0) + (16 - (c.maxLevel ?? 16));
+const toIso = (t) =>
+  t && t.length >= 15
+    ? `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}T${t.slice(9, 11)}:${t.slice(11, 13)}:${t.slice(13, 15)}Z`
+    : null;
 
-const isoTime = (t) =>
-  t ? t.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, "$1-$2-$3T$4:$5:$6") : null;
+// carte "de base" (collection : evo / hero = débloqués)
+const card = (c) => {
+  const lv = c.evolutionLevel ?? 0;
+  const evoImage = c.iconUrls?.evolutionMedium ?? null;
+  const heroImage = c.iconUrls?.heroMedium ?? null;
+  return {
+    id: c.id,
+    name: c.name,
+    level: lvl(c),
+    rarity: c.rarity,
+    elixir: c.elixirCost ?? null,
+    count: c.count ?? 0,
+    evo: (lv & 1) === 1 && !!evoImage,
+    hero: (lv & 2) === 2 && !!heroImage,
+    image: c.iconUrls?.medium,
+    evoImage,
+    heroImage,
+  };
+};
+
+// variante réellement jouée (valeur evolutionLevel d'un combat)
+const variantOf = (c, lv) => {
+  if ((lv & 1) === 1 && c.iconUrls?.evolutionMedium) return "evo";
+  if ((lv & 2) === 2 && c.iconUrls?.heroMedium) return "hero";
+  return "normal";
+};
+
+// si aucun combat ne permet de savoir : on devine d'après les emplacements du jeu
+function guessVariant(c, i) {
+  const lv = c.evolutionLevel ?? 0;
+  const canEvo = (lv & 1) === 1 && !!c.iconUrls?.evolutionMedium;
+  const canHero = (lv & 2) === 2 && !!c.iconUrls?.heroMedium;
+  if (i === 0) return canEvo ? "evo" : canHero ? "hero" : "normal";
+  if (i === 1) return canHero ? "hero" : canEvo ? "evo" : "normal";
+  if (i === 2) return canEvo ? "evo" : canHero ? "hero" : "normal";
+  return "normal";
+}
+
+const league = (r) =>
+  r ? { league: r.leagueNumber, trophies: r.trophies, rank: r.rank ?? null } : null;
+
+const safeJson = async (res) => {
+  try {
+    return res && res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+};
+
+const idsKey = (arr) => arr.map((c) => c.id).sort((a, b) => a - b).join(",");
+
+// ===== NORMALISATION DES CARTES API =====
+function normalizeCards(apiItems) {
+  return apiItems.map((c) => ({
+    id: c.id,
+    name: c.name,
+    elixir: c.elixirCost ?? 0,
+    rarity: (c.rarity ?? "common").toLowerCase(),
+    maxLevel: c.maxLevel ?? 16,
+    image: c.iconUrls?.medium ?? "",
+    evoImage: c.iconUrls?.evolutionMedium ?? null,
+    heroImage: c.iconUrls?.heroMedium ?? null,
+    type: null,
+    description: null,
+  }));
+}
 
 export default {
   async fetch(request, env) {
-    const CORS = corsHeaders(request);
-
-    if (request.method === "OPTIONS")
-      return new Response(null, { headers: CORS });
+    const origin = request.headers.get("Origin") || "*";
+    const cors = {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Vary": "Origin",
+    };
+    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
 
     const url = new URL(request.url);
-    const imageUrl = url.searchParams.get("image");
 
+    // ============================================================
+    // ROUTE IMAGE PROXY — /?image=URL
+    // ============================================================
+    const imageUrl = url.searchParams.get("image");
     if (imageUrl) {
       try {
         const remote = await fetch(imageUrl, { cf: { image: { quality: 80, fit: "scale-down" } } });
         if (!remote.ok) {
-          return new Response("Image introuvable", { status: 404, headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" } });
+          return new Response("Image introuvable", { status: 404, headers: { ...cors, "Content-Type": "text/plain" } });
         }
         const body = await remote.arrayBuffer();
         return new Response(body, {
           headers: {
-            ...CORS,
+            ...cors,
             "Content-Type": remote.headers.get("Content-Type") || "image/png",
             "Cache-Control": "public, max-age=86400, immutable",
           },
         });
       } catch {
-        return new Response("Image indisponible", { status: 502, headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" } });
+        return new Response("Image indisponible", { status: 502, headers: { ...cors, "Content-Type": "text/plain" } });
       }
     }
 
-    const raw = (url.searchParams.get("tag") || "").replace(/^#/, "").toUpperCase();
+    // ============================================================
+    // ROUTE /cards — proxy vers l'API officielle /v1/cards
+    // ============================================================
+    if (url.pathname === "/cards") {
+      try {
+        const res = await fetch(API_CARDS, {
+          headers: { Authorization: `Bearer ${env.CR_API_KEY}` },
+        });
+        if (!res.ok) {
+          return reply({ error: `API ${res.status}` }, res.status, cors);
+        }
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        return reply(
+          { cards: normalizeCards(items) },
+          200,
+          cors,
+          { "Cache-Control": "public, max-age=86400" }
+        );
+      } catch (err) {
+        return reply({ error: "Serveur injoignable" }, 502, cors);
+      }
+    }
 
-    if (!/^[0-9A-Z]{3,16}$/.test(raw))
-      return new Response(JSON.stringify({ error: "tag invalide" }), { status: 400, headers: CORS });
-
-    if (!env.CR_API_KEY)
-      return new Response(JSON.stringify({ error: "CR_API_KEY manquante" }), { status: 500, headers: CORS });
+    // ============================================================
+    // ROUTE JOUEUR — /?tag=XXXX
+    // ============================================================
+    const raw = url.searchParams.get("tag") ?? "";
+    const tag = raw.replace("#", "").trim().toUpperCase();
+    if (!/^[0289PYLQGRJCUV]{3,15}$/.test(tag)) {
+      return reply({ error: "Tag invalide" }, 400, cors);
+    }
 
     const headers = { Authorization: `Bearer ${env.CR_API_KEY}` };
+    const get = (suffix) =>
+      fetch(`${API_PLAYERS}%23${tag}${suffix}`, { headers }).catch(() => null);
 
-    const [pr, br] = await Promise.all([
-      fetch(`${API}/players/%23${raw}`, { headers }),
-      fetch(`${API}/players/%23${raw}/battlelog`, { headers }),
+    const [pRes, bRes, cRes] = await Promise.all([
+      get(""),
+      get("/battlelog"),
+      get("/upcomingchests"),
     ]);
 
-    if (pr.status === 404)
-      return new Response(JSON.stringify({ error: "introuvable" }), { status: 404, headers: CORS });
-    if (!pr.ok)
-      return new Response(JSON.stringify({ error: "api" }), { status: 502, headers: CORS });
+    if (!pRes) return reply({ error: "Serveur injoignable" }, 502, cors);
+    const p = await pRes.json();
+    if (!pRes.ok) return reply(p, pRes.status, cors);
 
-    const p = await pr.json();
-    const log = br.ok ? await br.json() : [];
+    const log = (await safeJson(bRes)) ?? [];
+    const rawLog = Array.isArray(log) ? log : [];
+    const chests = ((await safeJson(cRes))?.items ?? []).map((i) => i.name);
+    const meOf = (b) => b.team?.find((t) => t.tag === p.tag) ?? b.team?.[0] ?? {};
 
-    const battles = log.slice(0, 20).map((b) => {
-      const me = b.team?.[0] ?? {};
-      const opp = b.opponent?.[0] ?? {};
-      
-      const crowns = me.crowns ?? 0;
-      const oppCrowns = opp.crowns ?? 0;
-
-      // 🛡️ Extraction robuste pour le deck adverse (l'API met parfois .cards, parfois .deck)
-      const myCardsRaw = me.cards || me.deck || [];
-      const oppCardsRaw = opp.cards || opp.deck || [];
+    const battles = rawLog.slice(0, 20).map((b) => {
+      const me = meOf(b);
+      const opp = b.opponent ?? [];
+      const oppCrowns = opp[0]?.crowns ?? 0;
+      const meCrowns = me.crowns ?? 0;
+      const oppCardsRaw = opp[0]?.cards || opp[0]?.deck || [];
 
       return {
-        result: crowns > oppCrowns ? "win" : crowns < oppCrowns ? "loss" : "draw",
-        crowns,
+        time: toIso(b.battleTime),
+        mode: b.gameMode?.name ?? b.type,
+        result: meCrowns > oppCrowns ? "win" : meCrowns < oppCrowns ? "loss" : "draw",
+        crowns: meCrowns,
         oppCrowns,
-        time: isoTime(b.battleTime),
-        opponents: (b.opponent || []).map((o) => o.name),
-        cards: myCardsRaw.map(mapCard),
-        oppCards: oppCardsRaw.map(mapCard),
+        trophyChange: me.trophyChange ?? null,
+        opponents: opp.map((o) => o.name),
+        cards: (me.cards ?? []).map((c) => ({
+          ...card(c),
+          variant: variantOf(c, c.evolutionLevel ?? 0),
+        })),
+        oppCards: oppCardsRaw.map((c) => ({
+          ...card(c),
+          variant: variantOf(c, c.evolutionLevel ?? 0),
+        })),
       };
     });
 
-    const player = {
-      name: p.name, tag: p.tag, level: p.expLevel, trophies: p.trophies, bestTrophies: p.bestTrophies,
-      wins: p.wins, losses: p.losses, battleCount: p.battleCount, threeCrownWins: p.threeCrownWins,
-      totalDonations: p.totalDonations, donationsReceived: p.donationsReceived, warDayWins: p.warDayWins,
-      clanWarTrophies: p.clanWarTrophies, challengeMaxWins: p.challengeMaxWins, challengeCardsWon: p.challengeCardsWon,
-      role: p.role, arena: p.arena?.name, clan: p.clan?.name, favouriteCard: p.currentFavouriteCard?.name,
-      deck: (p.currentDeck || []).map(mapCard),
-      cards: (p.cards || []).map(mapCard),
-    };
-
-    return new Response(JSON.stringify({ player, battles }), {
-      headers: { ...CORS, "Cache-Control": "public, max-age=60" },
+    // deck actuel : on repère le dernier combat joué avec exactement ce deck
+    const rawDeck = p.currentDeck ?? [];
+    const deckKey = idsKey(rawDeck);
+    let equipped = null;
+    for (const b of rawLog) {
+      const cards = meOf(b)?.cards ?? [];
+      if (idsKey(cards) === deckKey) {
+        equipped = cards;
+        break;
+      }
+    }
+    const deck = rawDeck.map((c, i) => {
+      const variant = equipped
+        ? variantOf(c, equipped.find((x) => x.id === c.id)?.evolutionLevel ?? 0)
+        : guessVariant(c, i);
+      return { ...card(c), variant };
     });
+
+    return reply(
+      {
+        player: {
+          name: p.name,
+          tag: p.tag,
+          level: p.expLevel,
+          trophies: p.trophies,
+          bestTrophies: p.bestTrophies,
+          wins: p.wins,
+          losses: p.losses,
+          threeCrownWins: p.threeCrownWins,
+          battleCount: p.battleCount,
+          kingTowerLevel: p.kingTowerLevel,
+          collectionLevel: p.collectionLevel,
+          totalDonations: p.totalDonations,
+          warDayWins: p.warDayWins,
+          challengeMaxWins: p.challengeMaxWins,
+          streak: p.currentWinLoseStreak ?? 0,
+          role: p.role ?? null,
+          clan: p.clan?.name ?? null,
+          arena: p.arena?.name ?? null,
+          favouriteCard: p.currentFavouriteCard?.name ?? null,
+          deck,
+          deckFromBattle: !!equipped,
+          tower: (p.currentDeckSupportCards ?? []).map(card),
+        },
+        ranked: {
+          current: league(p.currentPathOfLegendSeasonResult),
+          last: league(p.lastPathOfLegendSeasonResult),
+          best: league(p.bestPathOfLegendSeasonResult),
+        },
+        cards: (p.cards ?? []).map(card),
+        badges: (p.badges ?? []).map((b) => ({
+          name: b.name,
+          level: b.level ?? null,
+          maxLevel: b.maxLevel ?? null,
+          progress: b.progress ?? 0,
+          target: b.target ?? null,
+          image: b.iconUrls?.large ?? "",
+        })),
+        chests,
+        battles,
+      },
+      200,
+      cors,
+      { "Cache-Control": "public, max-age=60" }
+    );
   },
 };
