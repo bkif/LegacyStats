@@ -124,9 +124,9 @@
     const badgesHtml = `
       <div class="cr-form20">
         ${battles.map((b, i) => {
-          const letter = b.result === "win" ? "V" : b.result === "loss" ? "D" : "N";
-          return `<a href="#battle-${i}" class="cr-bt cr-bt-${b.result}" title="Combat ${i+1} : ${letter} ${b.crowns}-${b.oppCrowns}">
-            <b>${letter}</b><small>${b.crowns}-${b.oppCrowns}</small>
+          const letter = b.result === "win" ? "W" : b.result === "loss" ? "L" : "D";
+          return `<a href="#battle-${i}" class="cr-bt cr-bt-${b.result}" title="Combat ${i+1} : ${letter} (${b.crowns}-${b.oppCrowns})">
+            <b>${letter}</b>
           </a>`;
         }).join("")}
       </div>`;
@@ -135,7 +135,7 @@
       const isWin = b.result === "win";
       const isLoss = b.result === "loss";
       const resLabel = isWin ? "Victoire" : isLoss ? "Défaite" : "Égalité";
-      const resBadge = isWin ? "V" : isLoss ? "D" : "N";
+      const resBadge = isWin ? "W" : isLoss ? "L" : "D";
       const myCards = renderMiniDeck(b.cards && b.cards.length ? b.cards : player.deck);
       const oppCards = renderMiniDeck(b.oppCards);
 

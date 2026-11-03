@@ -755,3 +755,55 @@ button.btn:hover { transform: translateY(-2px); }
   margin-top: 4px;
   display: block;
 }
+
+/* AGRANDISSEMENT DES CARTES DE COMBATS & BOUTONS W / L */
+.cr-form20 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+.cr-bt {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+}
+
+.b-card-strip {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 12px !important;
+}
+.b-card-strip .bd-card {
+  padding: 8px 6px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: transform .15s ease;
+}
+.b-card-strip .bd-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(247, 199, 90, 0.4);
+}
+.b-card-strip .bd-card img {
+  width: 100% !important;
+  max-width: 85px !important;
+  height: 95px !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)) !important;
+}
+.b-card-strip .bd-card-meta {
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  margin-top: 6px !important;
+}
