@@ -186,7 +186,7 @@
         </div>
       </section>`;
 
-    out.innerHTML = profileHtml + deckHtml + collectionHtml + battlesHtml;
+    out.innerHTML = `<div class="cr-top-row">${profileHtml}${deckHtml}</div>${collectionHtml}${battlesHtml}`;
 
     // Listener toggle collection
     const toggleBtn = document.getElementById("btn-toggle-collection");
