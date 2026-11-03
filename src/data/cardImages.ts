@@ -133,10 +133,13 @@ export function getCardSlug(name: string): string {
   return clean.replace(/[^a-z0-9]+/g, "-");
 }
 
-export function getLocalCardImage(name: string): string {
+export function getFallbackCardImage(name: string): string {
   const slug = getCardSlug(name);
   return `https://cdn.royaleapi.com/static/img/cards-150/${slug}.png`;
 }
+
+// Alias historique pour rétrocompatibilité (utilise le CDN en ligne, aucune image locale nécessaire)
+export const getLocalCardImage = getFallbackCardImage;
 
 export function createCardSvgFallback(cardName: string = "Carte", color: string = "#f7c75a"): string {
   const label = String(cardName).slice(0, 14) || "Carte";

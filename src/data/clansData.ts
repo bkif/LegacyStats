@@ -6,7 +6,7 @@ export const DEFAULT_CLAN: ClanData = {
   name: "TagUrTilted",
   description: "Clan compétitif Suisse & International. Guerres de clans obligatoires, dons rapides, respect et bonne humeur ! Tag ton adversaire et grimpe le ladder.",
   badgeId: 16000000,
-  badgeUrl: "/images/clan.png",
+  badgeUrl: "https://cdn.royaleapi.com/static/img/badge/shield_01.png",
   clanScore: 78450,
   clanWarTrophies: 3850,
   location: "Switzerland 🇨🇭",
