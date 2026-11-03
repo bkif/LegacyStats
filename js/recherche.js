@@ -40,9 +40,10 @@
   function cardTile(card) {
     const isMax = card.maxed;
     const isEvo = card.variant === "evo";
-    const fallback = cardFallback(card.name, card.rarity === "legendary" ? "#71f0d0" : card.rarity === "epic" ? "#d28dfd" : "#f7c75a");
+    const fallbackSvg = cardFallback(card.name, card.rarity === "legendary" ? "#71f0d0" : card.rarity === "epic" ? "#d28dfd" : "#f7c75a");
+    const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(card.name) : fallbackSvg;
     const imageSrc = card.image ? imageProxyUrl(card.image) : fallback;
-    const img = `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">`;
+    const img = `<img src="${esc(imageSrc)}" alt="${esc(card.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">`;
     const classes = ["cr-tile", `cr-r-${card.rarity || 'common'}`];
     if (isMax) classes.push("max");
     if (isEvo) classes.push("cr-v-evo");
@@ -122,11 +123,12 @@
 
         const b = battles[parseInt(btn.dataset.idx)];
         const oppCards = (b.oppCards || []).map(c => {
-          const fallback = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
+          const fallbackSvg = cardFallback(c.name, c.rarity === "legendary" ? "#71f0d0" : c.rarity === "epic" ? "#d28dfd" : "#f7c75a");
+          const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : fallbackSvg;
           const imageSrc = c.image ? imageProxyUrl(c.image) : fallback;
           return `
             <div class="bd-card">
-              <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'">
+              <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">
               <span class="bd-card-name">${esc(c.name)}</span>
               <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
             </div>

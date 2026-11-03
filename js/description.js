@@ -54,10 +54,11 @@ function buildCard(c) {
 
     const elixirInfo = c.elixir ? `<h2>Élixir<br>${c.elixir}</h2>` : "";
     const levelInfo = c.level ? `<h2>Niveau<br>${c.level}${c.maxLevel ? ` / ${c.maxLevel}` : ""}</h2>` : "";
+    const fallbackLocal = c.localImage || (typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : FALLBACK_IMG);
 
     article.innerHTML = `
         <h3>${c.name}</h3>
-        <img src="${c.image}" alt="${c.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=FALLBACK_IMG">
+        <img src="${c.image}" alt="${c.name}" loading="lazy" decoding="async" onerror="if (this.src !== '${fallbackLocal}') { this.src = '${fallbackLocal}'; } else { this.onerror = null; this.src = '${FALLBACK_IMG}'; }">
         <div class="card-stats">
             <h2 style="color:${meta.color}">Rareté<br>${meta.label}</h2>
             ${elixirInfo || levelInfo}

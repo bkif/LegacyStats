@@ -23,7 +23,8 @@ function renderCards() {
         el.draggable = true;
         el.dataset.id = card.id;
         el.setAttribute("aria-label", `${card.name}, ${card.elixir} élixir`);
-        el.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=FALLBACK_IMG">`;
+        const fallback = card.localImage || (typeof getLocalCardImage === "function" ? getLocalCardImage(card.name) : FALLBACK_IMG);
+        el.innerHTML = `<img src="${card.image}" alt="${card.name}" loading="lazy" decoding="async" onerror="if (this.src !== '${fallback}') { this.src = '${fallback}'; } else { this.onerror = null; this.src = '${FALLBACK_IMG}'; }">`;
 
         el.addEventListener("dragstart", e => {
             e.dataTransfer.setData("text/plain", card.id);
@@ -77,7 +78,8 @@ function setSlot(slot, id) {
     const card = db.cards.find(c => c.id === id);
     if (!card) return;
     slot.dataset.cardId = id;
-    slot.innerHTML = `<img src="${card.image}" alt="${card.name}" onerror="this.onerror=null;this.src=FALLBACK_IMG">`;
+    const fallback = card.localImage || (typeof getLocalCardImage === "function" ? getLocalCardImage(card.name) : FALLBACK_IMG);
+    slot.innerHTML = `<img src="${card.image}" alt="${card.name}" onerror="if (this.src !== '${fallback}') { this.src = '${fallback}'; } else { this.onerror = null; this.src = '${FALLBACK_IMG}'; }">`;
     slot.setAttribute("aria-label", `${card.name} dans le deck`);
     sync();
 }
@@ -103,9 +105,10 @@ function updateElixir() {
         out.textContent = "Élixir moyen : —";
         return;
     }
-    const total = deck.reduce((sum, id) => {
-        const c = db.cards.find(c => c.id === id);
-        return sum + (Number(c?.elixir) || 0);
+    const total = deck.reduce((acc, id) => {
+        const c = db.cards.find(card => card.id === id);
+        return acc + (c?.elixir || 0);
     }, 0);
-    out.textContent = `Élixir moyen : ${(total / deck.length).toFixed(1)}`;
+    const avg = (total / deck.length).toFixed(1);
+    out.textContent = `Élixir moyen : ${avg}`;
 }

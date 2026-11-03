@@ -38,6 +38,7 @@ async function loadDatabase() {
                 elixir: c.elixir ?? c.elixirCost ?? 0,
                 rarity: (c.rarity ?? "common").toLowerCase(),
                 image: cardImageUrl(c),
+                localImage: typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : FALLBACK_IMG,
                 level: c.level,
                 maxLevel: c.maxLevel,
             }));
