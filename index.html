@@ -1,65 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MH Legacy, Clash Royale Suisse 🇨🇭</title>
-<link rel="icon" href="./images/logo_clash_royale.png" type="image/png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="data/css/style.css">
-<link rel="stylesheet" href="data/css/home.css">
-<link rel="stylesheet" href="data/css/recherche.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MH Legacy, Clash Royale Suisse 🇨🇭</title>
+  <meta name="description" content="Plateforme suisse pour Clash Royale : recherche de profil et combats récents, deck builder interactif, fiches complètes des cartes, équilibrages par saison et e-sport.">
+  <meta property="og:title" content="MH Legacy, Clash Royale Suisse 🇨🇭">
+  <meta property="og:description" content="Plateforme suisse pour Clash Royale : recherche de profil et combats récents, deck builder interactif, fiches complètes des cartes, équilibrages par saison et e-sport.">
+  <link rel="icon" href="/images/logo_clash_royale.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-<a class="skip" href="#contenu">Aller au contenu</a>
-
-<header class="top">
-  <div class="bar">
-    <a href="./index.html" aria-label="MH Legacy, accueil"><img src="./images/logo_clash_royale.png" alt="" width="42" height="42"></a>
-    <nav class="nav" aria-label="Navigation principale"><div class="nav-links"></div></nav>
-  </div>
-</header>
-
-<main id="contenu">
-  <section class="hero" aria-labelledby="titre">
-    <span class="drop a" aria-hidden="true"></span>
-    <span class="drop b" aria-hidden="true"></span>
-    <div class="hero-in">
-      <h1 id="titre">MH Legacy</h1>
-      <p>Le site Clash Royale suisse. Entre un tag et retrouve le profil, le deck et les 20 derniers combats de n’importe quel joueur.</p>
-      <form id="search-form" class="cr-form" onsubmit="return false;">
-        <label for="tag-input">Tag du joueur</label>
-        <div class="cr-form-row">
-          <input type="text" id="tag-input" required maxlength="16" autocomplete="off" placeholder="#GG829JGY">
-          <button type="submit">Chercher</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <section id="joueur" aria-label="Résultat de la recherche">
-    <div id="search-result" aria-live="polite"></div>
-  </section>
-
-  <section class="qs" aria-labelledby="explorer">
-    <h2 id="explorer">Explorer le site</h2>
-    <div class="quick">
-      <a href="./cartes.html"><span class="ico" aria-hidden="true">🃏</span><b>Deck builder</b><span>Compose ton deck et calcule l’élixir moyen.</span></a>
-      <a href="./description_cartes.html"><span class="ico" aria-hidden="true">🔎</span><b>Fiches</b><span>Toutes les cartes, filtrées par rareté.</span></a>
-      <a href="./news.html"><span class="ico" aria-hidden="true">📰</span><b>Nouveautés</b><span>Équilibrages et saisons.</span></a>
-      <a href="./e-sport.html"><span class="ico" aria-hidden="true">🏆</span><b>E-sport</b><span>Les équipes et leurs palmarès.</span></a>
-      <a href="./crl.html"><span class="ico" aria-hidden="true">🎬</span><b>CRL</b><span>Les moments forts de la ligue.</span></a>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <p>Ce contenu n’est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell, et Supercell n’est pas responsable de ce contenu.</p>
-</footer>
-
-<script src="js/nav.js"></script>
-<script src="js/card-images.js"></script>`r`n<script src="js/recherche.js?v=16"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
