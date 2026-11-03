@@ -58,27 +58,22 @@
 
   function render(player, battles) {
     // 1. Profil
-    const stats = [
-      ["Trophées", player.trophies, true], ["Record", player.bestTrophies, false],
-      ["Victoires", player.wins, false], ["Défaites", player.losses, false],
-      ["Parties", player.battleCount, false], ["3 Couronnes", player.threeCrownWins, false]
-    ];
-    const statsHtml = stats.map(([l, v, hl]) => `
-      <div class="cr-stat${hl ? " hl" : ""}">
-        <span class="cr-stat-value">${esc(v ?? "—")}</span>
-        <span class="cr-stat-label">${l}</span>
-      </div>`).join("");
-
     const profileHtml = `
       <section class="cr-card">
-        <div class="cr-head">
-          <div class="cr-lvl">${esc(player.level)}</div>
-          <div>
-            <h2 class="cr-name">${esc(player.name)}</h2>
-            <p class="cr-sub">${esc(player.tag)} · ${esc(player.clan || "Sans clan")} · ${esc(player.arena || "")}</p>
+        <div class="cr-header">
+          <div class="cr-lvl">${player.level ?? "?"}</div>
+          <div class="cr-headline">
+            <h1 class="cr-name">${esc(player.name)}</h1>
+            <p class="cr-sub">${esc(player.tag)} ${player.clan ? "· 🛡️ " + esc(player.clan) : ""} ${player.arena ? "· 🏟️ " + esc(player.arena) : ""}</p>
           </div>
         </div>
-        <div class="cr-stats">${statsHtml}</div>
+        <div class="cr-stats">
+          <div class="cr-stat hl"><span class="cr-stat-value">${player.trophies?.toLocaleString("fr-CH") ?? "—"}</span><span class="cr-stat-label">Trophées</span></div>
+          <div class="cr-stat"><span class="cr-stat-value">${player.bestTrophies?.toLocaleString("fr-CH") ?? "—"}</span><span class="cr-stat-label">Record</span></div>
+          <div class="cr-stat"><span class="cr-stat-value">${player.wins?.toLocaleString("fr-CH") ?? "—"}</span><span class="cr-stat-label">Victoires</span></div>
+          <div class="cr-stat"><span class="cr-stat-value">${player.threeCrownWins?.toLocaleString("fr-CH") ?? "—"}</span><span class="cr-stat-label">3 Couronnes</span></div>
+          <div class="cr-stat"><span class="cr-stat-value">${player.losses?.toLocaleString("fr-CH") ?? "—"}</span><span class="cr-stat-label">Défaites</span></div>
+        </div>
       </section>`;
 
     // 2. Deck actuel
@@ -86,17 +81,32 @@
       <section class="cr-card">
         <div class="cr-sectionhead">
           <h2 class="cr-title">Deck actuel</h2>
-          <span class="cr-chip">🃏 8 cartes</span>
+          <span class="cr-chip">${player.deck.length} cartes</span>
         </div>
         <div class="cr-deckgrid">${player.deck.map(cardTile).join("")}</div>
-      </section>` : `<section class="cr-card"><p class="cr-message">Deck indisponible.</p></section>`;
+      </section>` : '';
 
-    // Calcul des victoires, défaites et nuls
+    // 3. Collection complète du joueur (toggleable)
+    const allPlayerCards = player.cards || [];
+    const collectionHtml = allPlayerCards.length ? `
+      <section class="cr-card">
+        <div class="cr-sectionhead">
+          <div>
+            <h2 class="cr-title">Collection de cartes</h2>
+            <small style="color:var(--muted)">${allPlayerCards.length} cartes débloquées</small>
+          </div>
+          <button type="button" class="cr-toggle-btn" id="btn-toggle-collection">Afficher la collection</button>
+        </div>
+        <div class="cr-deckgrid" id="player-collection" style="display:none; max-height:480px; overflow-y:auto; padding-right:6px;">
+          ${allPlayerCards.map(cardTile).join("")}
+        </div>
+      </section>` : '';
+
+    // Calcul victoires / défaites
     const winsCount = battles.filter(b => b.result === "win").length;
     const lossCount = battles.filter(b => b.result === "loss").length;
     const drawCount = battles.filter(b => b.result === "draw").length;
 
-    // Helper pour générer la grille de cartes d'un deck (joueur ou adversaire)
     function renderMiniDeck(cardsList) {
       if (!cardsList || !cardsList.length) return '<div class="cr-empty">Deck indisponible</div>';
       return cardsList.map(c => {
@@ -104,27 +114,23 @@
         const localImg = typeof getLocalCardImage === "function" ? getLocalCardImage(c.name) : fallbackSvg;
         const imageSrc = c.image ? imageProxyUrl(c.image) : localImg;
         return `
-          <div class="bd-card" title="${esc(c.name)}">
+          <div class="bd-card" title="${esc(c.name)} (Niv ${esc(c.level || '?')})">
             <img src="${esc(imageSrc)}" alt="${esc(c.name)}" loading="lazy" onerror="if (this.src !== '${localImg}') { this.src = '${localImg}'; } else { this.onerror = null; this.src = '${fallbackSvg}'; }">
-            <span class="bd-card-name">${esc(c.name)}</span>
             <span class="bd-card-meta">Niv ${esc(c.level || '?')}</span>
           </div>`;
       }).join("");
     }
 
-    // 1. Petits badges récapitulatifs cliquables / repères visuels
     const badgesHtml = `
       <div class="cr-form20">
         ${battles.map((b, i) => {
-          const perfect = b.result === "win" && b.crowns === 3 && b.oppCrowns === 0;
           const letter = b.result === "win" ? "V" : b.result === "loss" ? "D" : "N";
-          return `<a href="#battle-${i}" class="cr-bt cr-bt-${b.result}${perfect ? " cr-bt-perfect" : ""}" title="Combat ${i+1} : ${letter} ${b.crowns}-${b.oppCrowns}">
+          return `<a href="#battle-${i}" class="cr-bt cr-bt-${b.result}" title="Combat ${i+1} : ${letter} ${b.crowns}-${b.oppCrowns}">
             <b>${letter}</b><small>${b.crowns}-${b.oppCrowns}</small>
           </a>`;
         }).join("")}
       </div>`;
 
-    // 2. Liste complète des combats avec double deck (Mon deck + Deck adverse)
     const battlesListHtml = battles.length ? battles.map((b, i) => {
       const isWin = b.result === "win";
       const isLoss = b.result === "loss";
@@ -134,23 +140,28 @@
       const oppCards = renderMiniDeck(b.oppCards);
 
       return `
-        <article class="cr-battle-item cr-battle-${b.result}" id="battle-${i}">
-          <div class="bd-head">
-            <span class="bd-result ${b.result}">${resBadge}</span>
-            <div class="bd-info">
-              <h4>${resLabel} · ${b.crowns} - ${b.oppCrowns} 👑</h4>
-              <p>Contre <strong>${esc(b.opponents.join(' & ') || 'Adversaire')}</strong>${fmtDate(b.time) ? " · " + fmtDate(b.time) : ""}</p>
+        <article class="cr-battle-row cr-battle-${b.result}" id="battle-${i}">
+          <div class="b-row-header">
+            <div class="b-score-badge">
+              <span class="bd-badge ${b.result}">${resBadge}</span>
+              <span class="b-crowns">${b.crowns} - ${b.oppCrowns} 👑</span>
             </div>
+            <div class="b-versus">
+              <span class="b-me">${esc(player.name)}</span>
+              <span class="b-vs">VS</span>
+              <span class="b-opp">${esc(b.opponents.join(' & ') || 'Adversaire')}</span>
+            </div>
+            <time class="b-time">${fmtDate(b.time)}</time>
           </div>
 
-          <div class="cr-battle-decks">
-            <div class="cr-deck-side">
-              <h5>Mon Deck</h5>
-              <div class="bd-cards">${myCards}</div>
+          <div class="b-matchup">
+            <div class="b-deck-col">
+              <div class="b-col-title">Mon deck</div>
+              <div class="b-card-strip">${myCards}</div>
             </div>
-            <div class="cr-deck-side">
-              <h5>Deck Adverse</h5>
-              <div class="bd-cards">${oppCards}</div>
+            <div class="b-deck-col">
+              <div class="b-col-title">Deck adverse</div>
+              <div class="b-card-strip">${oppCards}</div>
             </div>
           </div>
         </article>`;
@@ -167,7 +178,7 @@
               ${drawCount ? `<span class="score-d">🤝 ${drawCount} Nuls</span>` : ""}
             </div>
           </div>
-          <span class="cr-chip">${battles.length} combats analysés</span>
+          <span class="cr-chip">${battles.length} combats</span>
         </div>
         ${badgesHtml}
         <div class="cr-battles-stream">
@@ -175,7 +186,18 @@
         </div>
       </section>`;
 
-    out.innerHTML = profileHtml + deckHtml + battlesHtml;
+    out.innerHTML = profileHtml + deckHtml + collectionHtml + battlesHtml;
+
+    // Listener toggle collection
+    const toggleBtn = document.getElementById("btn-toggle-collection");
+    const collBox = document.getElementById("player-collection");
+    if (toggleBtn && collBox) {
+      toggleBtn.addEventListener("click", () => {
+        const isHidden = collBox.style.display === "none";
+        collBox.style.display = isHidden ? "grid" : "none";
+        toggleBtn.textContent = isHidden ? "Masquer la collection" : "Afficher la collection";
+      });
+    }
   }
 
   async function loadFallbackData(tag) {
