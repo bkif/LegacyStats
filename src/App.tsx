@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavTab } from './types';
+import { NavTab, GameMode } from './types';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomeView } from './components/HomeView';
@@ -10,12 +10,17 @@ import { EsportView } from './components/EsportView';
 import { ClanSiteView } from './components/ClanSiteView';
 import { CrlView } from './components/CrlView';
 import { ContactView } from './components/ContactView';
+import { RocketLeagueView } from './components/RocketLeagueView';
 
 export function App() {
+  const [activeGame, setActiveGame] = useState<GameMode>(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash === 'rocket-league' ? 'rocket-league' : 'clash-royale';
+  });
+
   const [currentTab, setCurrentTab] = useState<NavTab>(() => {
-    // Check initial hash or pathname
     const hash = window.location.hash.replace('#', '') as NavTab;
-    const validTabs: NavTab[] = ['home', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'];
+    const validTabs: NavTab[] = ['home', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact', 'rocket-league'];
     if (validTabs.includes(hash)) {
       return hash;
     }
@@ -25,9 +30,15 @@ export function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') as NavTab;
-      const validTabs: NavTab[] = ['home', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'];
-      if (validTabs.includes(hash)) {
-        setCurrentTab(hash);
+      if (hash === 'rocket-league') {
+        setActiveGame('rocket-league');
+        setCurrentTab('rocket-league');
+      } else {
+        const validTabs: NavTab[] = ['home', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'];
+        if (validTabs.includes(hash)) {
+          setActiveGame('clash-royale');
+          setCurrentTab(hash);
+        }
       }
     };
     window.addEventListener('hashchange', handleHashChange);
@@ -40,20 +51,44 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSelectGame = (game: GameMode) => {
+    setActiveGame(game);
+    if (game === 'rocket-league') {
+      setCurrentTab('rocket-league');
+      window.location.hash = 'rocket-league';
+    } else {
+      setCurrentTab('home');
+      window.location.hash = 'home';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       <a className="skip" href="#contenu">Aller au contenu</a>
 
-      <Navbar currentTab={currentTab} onSelectTab={handleSelectTab} />
+      <Navbar
+        currentTab={currentTab}
+        onSelectTab={handleSelectTab}
+        activeGame={activeGame}
+        onSelectGame={handleSelectGame}
+      />
 
-      {currentTab === 'home' && <HomeView onNavigate={handleSelectTab} />}
-      {currentTab === 'cards' && <DeckBuilderView />}
-      {currentTab === 'description' && <CardsDescriptionView />}
-      {currentTab === 'news' && <NewsView />}
-      {currentTab === 'esport' && <EsportView />}
-      {currentTab === 'clans' && <ClanSiteView />}
-      {currentTab === 'crl' && <CrlView />}
-      {currentTab === 'contact' && <ContactView />}
+      {/* Main Game Content */}
+      {activeGame === 'rocket-league' ? (
+        <RocketLeagueView />
+      ) : (
+        <>
+          {currentTab === 'home' && <HomeView onNavigate={handleSelectTab} />}
+          {currentTab === 'cards' && <DeckBuilderView />}
+          {currentTab === 'description' && <CardsDescriptionView />}
+          {currentTab === 'news' && <NewsView />}
+          {currentTab === 'esport' && <EsportView />}
+          {currentTab === 'clans' && <ClanSiteView />}
+          {currentTab === 'crl' && <CrlView />}
+          {currentTab === 'contact' && <ContactView />}
+        </>
+      )}
 
       <Footer />
     </>

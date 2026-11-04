@@ -105,4 +105,55 @@ export interface ClanData {
   members: ClanMember[];
 }
 
-export type NavTab = 'home' | 'cards' | 'description' | 'news' | 'esport' | 'clans' | 'crl' | 'contact';
+export type NavTab = 'home' | 'cards' | 'description' | 'news' | 'esport' | 'clans' | 'crl' | 'contact' | 'rocket-league';
+
+export type GameMode = 'clash-royale' | 'rocket-league';
+
+export interface RlPlaylist {
+  id: string;
+  name: string;
+  shortName: string;
+  rank: string; // e.g., 'Grand Champion II', 'Supersonic Legend'
+  tier: number;
+  division: number;
+  mmr: number;
+  streak: number; // +3, -2, etc.
+  iconUrl?: string;
+  matchesPlayed: number;
+  winRate: number;
+}
+
+export interface RlMatch {
+  id: string;
+  playlist: string;
+  result: 'win' | 'loss';
+  score: string; // e.g. "4 - 2"
+  goals: number;
+  assists: number;
+  saves: number;
+  shots: number;
+  mvp: boolean;
+  date: string;
+  mmrChange: number; // e.g. +9, -10
+}
+
+export interface RlPlayerProfile {
+  name: string;
+  platform: 'epic' | 'steam' | 'psn' | 'xbox';
+  avatarUrl: string;
+  title: string;
+  rewardLevel: string; // 'Grand Champion Season 14 Reward Level'
+  globalRank: string;
+  overallMmr: number;
+  wins: number;
+  winRate: number;
+  goals: number;
+  saves: number;
+  assists: number;
+  mvps: number;
+  shots: number;
+  shotAccuracy: number;
+  streak: number;
+  playlists: RlPlaylist[];
+  recentMatches: RlMatch[];
+}

@@ -46,16 +46,32 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
 
       if (data && data.player) {
         const p = data.player;
+        // Ensure complete 8 cards in deck:
+        let deckList: any[] = Array.isArray(p.deck) ? [...p.deck] : [];
+        const rawBattles: any[] = Array.isArray(data.battles) ? data.battles : [];
 
-        // Ensure 8 cards in deck (merge tower or deckFromBattle if available)
-        let deckList: any[] = p.deck || [];
-        if (deckList.length < 8 && Array.isArray(p.deckFromBattle) && p.deckFromBattle.length >= 8) {
-          deckList = p.deckFromBattle;
-        } else if (deckList.length < 8 && p.tower) {
-          deckList = [...deckList, { ...p.tower, name: p.tower.name || 'Tower Troop', rarity: 'tower' }];
+        // If deck has less than 8 cards, pull the missing cards from the most recent battle
+        if (deckList.length < 8 && rawBattles.length > 0 && Array.isArray(rawBattles[0].cards)) {
+          const existingIds = new Set(deckList.map((c: any) => c.id || c.name));
+          for (const bCard of rawBattles[0].cards) {
+            if (deckList.length >= 8) break;
+            const cid = bCard.id || bCard.name;
+            if (!existingIds.has(cid)) {
+              deckList.push(bCard);
+              existingIds.add(cid);
+            }
+          }
         }
 
-        const normalizedBattles: Battle[] = (data.battles || []).map((b: any, idx: number) => ({
+        // If still under 8, check tower support cards
+        if (deckList.length < 8 && Array.isArray(p.tower) && p.tower.length > 0) {
+          for (const tCard of p.tower) {
+            if (deckList.length >= 8) break;
+            deckList.push({ ...tCard, rarity: tCard.rarity || 'tower' });
+          }
+        }
+
+        const normalizedBattles: Battle[] = rawBattles.map((b: any, idx: number) => ({
           id: `battle-${idx}`,
           result: (b.result === 'win' || b.result === 'loss' || b.result === 'draw') ? b.result : 'win',
           crowns: b.crowns ?? 0,
@@ -432,7 +448,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       <span>{card.elixir || 3}</span>
                     </div>
 
-                    {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                     {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
 
                     <div className="w-full aspect-[1/1.22] flex items-center justify-center">
@@ -578,7 +593,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                           return (
                             <div key={`my-${i}-${cIdx}`} className="text-center group">
                               <div className={`cr-card-frame ${variantClass} relative`}>
-                                {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                 {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
                                 <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                   <CardImage
@@ -613,7 +627,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                             return (
                               <div key={`opp-${i}-${cIdx}`} className="text-center group">
                                 <div className={`cr-card-frame ${variantClass} relative`}>
-                                  {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                   {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
                                   <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                     <CardImage
