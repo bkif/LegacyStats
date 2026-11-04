@@ -419,13 +419,13 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* 8 Cards in 4x2 Grid */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
+            <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
               {deckCards.map((card, idx) => {
                 const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                 return (
                   <div
                     key={`${card.id || card.name}-${idx}`}
-                    className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1.5 sm:p-2.5 relative`}
+                    className={`cr-card-frame ${variantClass} relative flex flex-col items-center cursor-pointer`}
                     title={`${card.name} (Niv ${card.level ?? '?'})${card.variant === 'evo' ? ' - ÉVOLUTION' : card.variant === 'hero' ? ' - HÉROS' : ''}`}
                   >
                     <div className="cr-elixir-drop">
@@ -435,7 +435,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                     {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                     {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
 
-                    <div className="w-full h-24 sm:h-32 flex items-center justify-center p-0.5">
+                    <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                       <CardImage
                         name={card.name}
                         image={card.image}
@@ -443,9 +443,10 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                         variant={card.variant}
                         evoImage={card.evoImage}
                         heroImage={card.heroImage}
+                        className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="cr-level-badge mt-1.5 font-black">
+                    <span className="cr-level-badge -mt-2 sm:-mt-2.5 font-black z-20">
                       Niv {card.level ?? 14}
                     </span>
                   </div>
@@ -576,10 +577,10 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                           const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                           return (
                             <div key={`my-${i}-${cIdx}`} className="text-center group">
-                              <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}>
+                              <div className={`cr-card-frame ${variantClass} relative`}>
                                 {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                 {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
-                                <div className="w-full h-16 sm:h-20 flex items-center justify-center p-0.5">
+                                <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                   <CardImage
                                     name={card.name}
                                     image={card.image}
@@ -587,6 +588,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                                     variant={card.variant}
                                     evoImage={card.evoImage}
                                     heroImage={card.heroImage}
+                                    className="w-full h-full object-contain"
                                   />
                                 </div>
                               </div>
@@ -610,10 +612,10 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                             const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                             return (
                               <div key={`opp-${i}-${cIdx}`} className="text-center group">
-                                <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}>
+                                <div className={`cr-card-frame ${variantClass} relative`}>
                                   {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                   {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
-                                  <div className="w-full h-16 sm:h-20 flex items-center justify-center p-0.5">
+                                  <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                     <CardImage
                                       name={card.name}
                                       image={card.image}
@@ -621,6 +623,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                                       variant={card.variant}
                                       evoImage={card.evoImage}
                                       heroImage={card.heroImage}
+                                      className="w-full h-full object-contain"
                                     />
                                   </div>
                                 </div>
