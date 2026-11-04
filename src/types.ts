@@ -41,6 +41,7 @@ export interface PlayerProfile {
   losses: number;
   battleCount?: number;
   threeCrownWins: number;
+  streak?: number;
   arena?: string;
   clan?: string;
   favouriteCard?: string;

@@ -80,6 +80,27 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           }))
         }));
 
+        // Calculate streak from recent battles if streak isn't explicitly provided
+        let calcStreak = typeof p.streak === 'number' ? p.streak : 0;
+        if (calcStreak === 0 && normalizedBattles.length > 0) {
+          const firstResult = normalizedBattles[0].result;
+          if (firstResult === 'win') {
+            let count = 0;
+            for (const b of normalizedBattles) {
+              if (b.result === 'win') count++;
+              else break;
+            }
+            calcStreak = count;
+          } else if (firstResult === 'loss') {
+            let count = 0;
+            for (const b of normalizedBattles) {
+              if (b.result === 'loss') count++;
+              else break;
+            }
+            calcStreak = -count;
+          }
+        }
+
         setPlayer({
           name: p.name || `Joueur #${cleanTag}`,
           tag: p.tag || `#${cleanTag}`,
@@ -90,6 +111,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           losses: p.losses || 0,
           threeCrownWins: p.threeCrownWins || 0,
           battleCount: p.battleCount || (p.wins + p.losses),
+          streak: calcStreak,
           clan: p.clan || undefined,
           arena: p.arena || undefined,
           favouriteCard: p.favouriteCard || undefined,
@@ -260,6 +282,17 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                   <span className="text-[11px] sm:text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
                     {player.tag}
                   </span>
+                  {player.streak !== undefined && player.streak !== 0 && (
+                    <span
+                      className={`inline-flex items-center gap-1 text-[11px] sm:text-xs font-display px-2.5 py-0.5 rounded-full border shadow-md font-black ${
+                        player.streak > 0
+                          ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border-emerald-500/50 shadow-emerald-500/20 animate-pulse'
+                          : 'bg-gradient-to-r from-rose-500/20 to-red-500/20 text-rose-300 border-rose-500/50 shadow-rose-500/20'
+                      }`}
+                    >
+                      {player.streak > 0 ? '🔥 WIN STREAK' : '❄️ LOSE STREAK'} : {Math.abs(player.streak)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-400 mt-1 flex-wrap font-bold">
                   {player.clan && (
@@ -277,7 +310,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* Stats Cards Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               <div className="cr-stat-box p-2.5 sm:p-3.5">
                 <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>🏆</span> Trophées
@@ -305,6 +338,32 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                 </div>
               </div>
 
+              {/* Streak Stat Box */}
+              <div className={`cr-stat-box p-2.5 sm:p-3.5 ${
+                (player.streak ?? 0) > 0
+                  ? 'border-emerald-500/40 bg-emerald-950/20'
+                  : (player.streak ?? 0) < 0
+                  ? 'border-rose-500/40 bg-rose-950/20'
+                  : ''
+              }`}>
+                <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
+                  {(player.streak ?? 0) >= 0 ? (
+                    <span className="text-emerald-400">🔥 Win Streak</span>
+                  ) : (
+                    <span className="text-rose-400">❄️ Lose Streak</span>
+                  )}
+                </div>
+                <div className={`text-lg sm:text-2xl font-display ${
+                  (player.streak ?? 0) > 0 ? 'text-emerald-400' : (player.streak ?? 0) < 0 ? 'text-rose-400' : 'text-slate-300'
+                }`}>
+                  {player.streak && player.streak > 0
+                    ? `+${player.streak}`
+                    : player.streak && player.streak < 0
+                    ? `${player.streak}`
+                    : '0'}
+                </div>
+              </div>
+
               <div className="cr-stat-box p-2.5 sm:p-3.5">
                 <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
                   <span>✅</span> Victoires
@@ -329,6 +388,15 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                 </div>
                 <div className="text-lg sm:text-2xl font-display text-white">
                   {player.threeCrownWins?.toLocaleString('fr-CH') || '—'}
+                </div>
+              </div>
+
+              <div className="cr-stat-box p-2.5 sm:p-3.5">
+                <div className="text-[10px] sm:text-xs font-bold text-cyan-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
+                  <span>🎮</span> Combats
+                </div>
+                <div className="text-lg sm:text-2xl font-display text-white">
+                  {player.battleCount?.toLocaleString('fr-CH') || ((player.wins || 0) + (player.losses || 0)).toLocaleString('fr-CH')}
                 </div>
               </div>
             </div>
