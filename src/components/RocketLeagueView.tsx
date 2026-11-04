@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { RlPlayerProfile } from '../types';
-import { POPULAR_RL_PLAYERS } from '../data/rocketLeagueData';
+import { POPULAR_RL_PLAYERS, fetchLiveRocketLeagueProfile } from '../data/rocketLeagueData';
 import { playTapSound } from '../utils/audio';
 
 const RANK_BADGE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -20,16 +20,27 @@ export const RocketLeagueView = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = (name: string) => {
+  const handleSearch = async (name: string) => {
     playTapSound();
     setLoading(true);
     setError(null);
 
     const queryKey = name.toLowerCase().trim();
-    setTimeout(() => {
-      if (POPULAR_RL_PLAYERS[queryKey]) {
-        setProfile(POPULAR_RL_PLAYERS[queryKey]);
-      } else {
+
+    // 1. Try Live RapidAPI Gateway
+    const liveData = await fetchLiveRocketLeagueProfile(name);
+    if (liveData && liveData.name) {
+      setProfile(liveData as RlPlayerProfile);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Check curated profiles
+    if (POPULAR_RL_PLAYERS[queryKey]) {
+      setProfile(POPULAR_RL_PLAYERS[queryKey]);
+      setLoading(false);
+      return;
+    }
         // Generate procedural authentic profile for searched player
         const wins = Math.floor(2000 + Math.random() * 8000);
         const winRate = Number((54 + Math.random() * 12).toFixed(1));
@@ -120,9 +131,7 @@ export const RocketLeagueView = () => {
             }
           ]
         });
-      }
       setLoading(false);
-    }, 300);
   };
 
   const onSubmit = (e: FormEvent) => {

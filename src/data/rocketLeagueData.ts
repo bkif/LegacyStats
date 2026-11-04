@@ -1,5 +1,27 @@
 import { RlPlayerProfile } from '../types';
 
+export const RAPIDAPI_KEY = "dcffce928bmsh3a16fcdbd80cce3p19df42jsn5b6702c9098b";
+export const RAPIDAPI_HOST = "rocket-league1.p.rapidapi.com";
+
+export async function fetchLiveRocketLeagueProfile(username: string): Promise<Partial<RlPlayerProfile> | null> {
+  try {
+    const encodedUser = encodeURIComponent(username.trim());
+    const res = await fetch(`https://${RAPIDAPI_HOST}/ranks/${encodedUser}`, {
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': RAPIDAPI_HOST,
+        'User-Agent': 'LEGACYSTATS/1.0'
+      }
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 export const POPULAR_RL_PLAYERS: Record<string, RlPlayerProfile> = {
   zen: {
     name: 'Zen (Team Vitality)',
@@ -17,7 +39,7 @@ export const POPULAR_RL_PLAYERS: Record<string, RlPlayerProfile> = {
     mvps: 6890,
     shots: 58200,
     shotAccuracy: 48.8,
-    streak: 6, // 6 win streak
+    streak: 6,
     playlists: [
       {
         id: 'ranked-2v2',
@@ -236,7 +258,7 @@ export const POPULAR_RL_PLAYERS: Record<string, RlPlayerProfile> = {
     mvps: 10500,
     shots: 89000,
     shotAccuracy: 50.5,
-    streak: -2, // 2 lose streak
+    streak: -2,
     playlists: [
       {
         id: 'ranked-2v2',
