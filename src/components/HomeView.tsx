@@ -12,7 +12,7 @@ interface HomeViewProps {
 const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
 
 export const HomeView = ({ onNavigate }: HomeViewProps) => {
-  const [tagInput, setTagInput] = useState<string>('#v9jjgll0g');
+  const [tagInput, setTagInput] = useState<string>('#V9JJGLL0G');
   const [player, setPlayer] = useState<PlayerProfile>(DEFAULT_PLAYER);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -479,23 +479,23 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                   className={`cr-match-card ${resultClass} ${activeBattleId === `match-${i}` ? 'ring-2 ring-amber-400' : ''} p-3.5 sm:p-5 rounded-xl sm:rounded-2xl`}
                 >
                   {/* Match Header */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-white/5 pb-2.5 mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`px-2 py-0.5 rounded-md font-display text-[10px] sm:text-xs ${badgeColor}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2.5 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-md font-display text-[10px] sm:text-xs ${badgeColor} shrink-0`}>
                         {isWin ? 'VICTOIRE' : isLoss ? 'DÉFAITE' : 'ÉGALITÉ'}
                       </span>
-                      <span className="font-display text-base sm:text-lg text-white">
+                      <span className="font-display text-sm sm:text-lg text-white shrink-0">
                         {b.crowns} - {b.oppCrowns} 👑
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs sm:text-sm flex-wrap">
-                      <span className="font-extrabold text-amber-400 truncate max-w-[130px] sm:max-w-none">{player.name}</span>
-                      <span className="text-[10px] sm:text-xs text-slate-500 font-bold">VS</span>
-                      <span className="font-extrabold text-slate-200 truncate max-w-[130px] sm:max-w-none">{b.opponents.join(' & ') || 'Adversaire'}</span>
+                    <div className="flex items-center gap-1.5 text-[11px] sm:text-sm font-bold min-w-0 flex-1 justify-center sm:justify-start">
+                      <span className="text-amber-400 truncate max-w-[90px] sm:max-w-none">{player.name}</span>
+                      <span className="text-[10px] text-slate-500 font-black">VS</span>
+                      <span className="text-slate-200 truncate max-w-[90px] sm:max-w-none">{b.opponents.join(' & ') || 'Adversaire'}</span>
                     </div>
 
-                    <time className="text-[10px] sm:text-xs text-slate-400 font-bold">{formatDate(b.time)}</time>
+                    <time className="text-[10px] sm:text-xs text-slate-400 font-bold shrink-0">{formatDate(b.time)}</time>
                   </div>
 
                   {/* Matchup Comparison (Mon Deck vs Deck Adverse) */}

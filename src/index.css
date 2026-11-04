@@ -226,12 +226,13 @@ h1, h2, h3, h4, h5 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 12px;
+  justify-content: space-between;
+  border-radius: 10px;
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border: 1.5px solid #334155;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  overflow: hidden;
+  overflow: visible;
   max-width: 100%;
 }
 
@@ -253,29 +254,29 @@ h1, h2, h3, h4, h5 {
 }
 
 .cr-card-frame:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.65);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
 }
 
 /* Rarity Rims */
 .cr-card-frame.r-common {
   border-color: #64748b;
-  box-shadow: 0 3px 10px rgba(100, 116, 139, 0.3);
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.35);
 }
 
 .cr-card-frame.r-rare {
   border-color: #f59e0b;
-  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
 }
 
 .cr-card-frame.r-epic {
   border-color: #c026d3;
-  box-shadow: 0 3px 14px rgba(192, 38, 211, 0.4);
+  box-shadow: 0 2px 12px rgba(192, 38, 211, 0.45);
 }
 
 .cr-card-frame.r-legendary {
   border-color: #2dd4bf;
-  box-shadow: 0 0 14px rgba(45, 212, 191, 0.45);
+  box-shadow: 0 0 14px rgba(45, 212, 191, 0.5);
   animation: legendarySheen 4s ease-in-out infinite alternate;
 }
 
@@ -288,53 +289,56 @@ h1, h2, h3, h4, h5 {
 .cr-card-frame.r-champion,
 .cr-card-frame.r-hero {
   border-color: #f5c438;
-  box-shadow: 0 0 16px rgba(245, 196, 56, 0.5);
+  box-shadow: 0 0 16px rgba(245, 196, 56, 0.55);
 }
 
 /* Evolutions (Evo) & Heroes Styles */
 .cr-card-frame.is-evo {
   border-color: #d946ef !important;
-  box-shadow: 0 0 14px rgba(217, 70, 239, 0.65), inset 0 0 8px rgba(192, 38, 211, 0.25) !important;
+  box-shadow: 0 0 14px rgba(217, 70, 239, 0.7), inset 0 0 8px rgba(192, 38, 211, 0.3) !important;
   animation: evoPulse 3s ease-in-out infinite alternate;
 }
 
 @keyframes evoPulse {
   0% { border-color: #d946ef; box-shadow: 0 0 12px rgba(217, 70, 239, 0.5); }
-  50% { border-color: #ec4899; box-shadow: 0 0 18px rgba(236, 72, 153, 0.7); }
-  100% { border-color: #a855f7; box-shadow: 0 0 14px rgba(168, 85, 247, 0.6); }
+  50% { border-color: #ec4899; box-shadow: 0 0 18px rgba(236, 72, 153, 0.75); }
+  100% { border-color: #a855f7; box-shadow: 0 0 14px rgba(168, 85, 247, 0.65); }
 }
 
 .cr-card-frame.is-hero {
   border-color: #f5c438 !important;
-  box-shadow: 0 0 16px rgba(245, 196, 56, 0.7), inset 0 0 8px rgba(245, 196, 56, 0.25) !important;
+  box-shadow: 0 0 16px rgba(245, 196, 56, 0.75), inset 0 0 8px rgba(245, 196, 56, 0.3) !important;
   animation: heroGlow 3s ease-in-out infinite alternate;
 }
 
 @keyframes heroGlow {
   0% { border-color: #f5c438; }
-  100% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(245, 196, 56, 0.85); }
+  100% { border-color: #fbbf24; box-shadow: 0 0 20px rgba(245, 196, 56, 0.9); }
 }
 
 .cr-evo-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: -4px;
+  right: -4px;
   background: linear-gradient(135deg, #f472b6 0%, #c026d3 50%, #7e22ce 100%);
   color: #fff;
   font-family: var(--font-display);
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 900;
   padding: 1px 4px;
   border-radius: 4px;
   border: 1px solid #fbcfe8;
-  box-shadow: 0 2px 6px rgba(192, 38, 211, 0.75);
+  box-shadow: 0 2px 6px rgba(192, 38, 211, 0.8);
   letter-spacing: 0.04em;
-  z-index: 10;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 20;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {
   .cr-evo-badge {
+    top: -5px;
+    right: -5px;
     font-size: 0.62rem;
     padding: 1.5px 5px;
     border-radius: 5px;
@@ -343,23 +347,26 @@ h1, h2, h3, h4, h5 {
 
 .cr-hero-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: -4px;
+  right: -4px;
   background: linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #b45309 100%);
   color: #1a0f00;
   font-family: var(--font-display);
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 900;
   padding: 1px 4px;
   border-radius: 4px;
   border: 1px solid #fef08a;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.75);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.8);
   letter-spacing: 0.04em;
-  z-index: 10;
+  z-index: 20;
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {
   .cr-hero-badge {
+    top: -5px;
+    right: -5px;
     font-size: 0.62rem;
     padding: 1.5px 5px;
     border-radius: 5px;
@@ -369,10 +376,10 @@ h1, h2, h3, h4, h5 {
 /* Elixir Droplet Badge */
 .cr-elixir-drop {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
+  top: -4px;
+  left: -4px;
+  width: 17px;
+  height: 17px;
   border-radius: 50% 50% 50% 3px;
   transform: rotate(-45deg);
   background: linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #9f1239 100%);
@@ -380,14 +387,15 @@ h1, h2, h3, h4, h5 {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+  z-index: 20;
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {
   .cr-elixir-drop {
-    top: 4px;
-    left: 4px;
+    top: -5px;
+    left: -5px;
     width: 24px;
     height: 24px;
     border-width: 1.5px;
@@ -397,10 +405,10 @@ h1, h2, h3, h4, h5 {
 .cr-elixir-drop span {
   transform: rotate(45deg);
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: #fff;
   font-weight: 900;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 @media (min-width: 640px) {
@@ -414,19 +422,20 @@ h1, h2, h3, h4, h5 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1px 5px;
+  padding: 1px 4px;
   background: linear-gradient(180deg, #1e293b 0%, #0a0f1d 100%);
   border: 1px solid rgba(245, 196, 56, 0.6);
   border-radius: 999px;
   color: #fde047;
   font-weight: 800;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.01em;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  max-width: 90%;
+  max-width: 96%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {

@@ -3,8 +3,8 @@ import { PlayerProfile } from '../types';
 import { getLocalCardImage } from './cardImages';
 
 export const DEFAULT_PLAYER: PlayerProfile = {
-  name: "Tag™",
-  tag: "#v9jjgll0g",
+  name: "ムクレガシ ᝰ MHL",
+  tag: "#V9JJGLL0G",
   level: 89,
   trophies: 14000,
   bestTrophies: 14000,
