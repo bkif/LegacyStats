@@ -246,7 +246,7 @@ export const DeckBuilderView = () => {
         {/* Elixir Analytics Indicator */}
         <div className="bg-slate-950/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-600 to-fuchsia-700 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
               <span className="text-lg sm:text-xl">⚡</span>
             </div>
             <div>

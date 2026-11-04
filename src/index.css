@@ -15,8 +15,9 @@
   --cr-gold: #f5c438;
   --cr-gold-light: #ffe885;
   --cr-gold-dark: #c28205;
-  --cr-elixir: #f43f5e;
-  --cr-elixir-glow: #fb7185;
+  --cr-elixir: #d946ef;
+  --cr-elixir-glow: #e879f9;
+  --cr-elixir-dark: #a21caf;
   --cr-blue: #38bdf8;
   --cr-cyan: #2dd4bf;
   --cr-green: #22c55e;
@@ -45,9 +46,9 @@ body {
   color: var(--text-main);
   background-color: var(--bg-dark);
   background-image:
-    radial-gradient(circle at 10% 0%, rgba(244, 63, 94, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(245, 196, 56, 0.05) 0%, transparent 60%),
+    radial-gradient(circle at 10% 0%, rgba(217, 70, 239, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(245, 196, 56, 0.06) 0%, transparent 60%),
     linear-gradient(180deg, #070b14 0%, #0d1527 50%, #080d18 100%);
   background-attachment: fixed;
   overflow-x: hidden;
@@ -62,7 +63,7 @@ body::before {
   background-image:
     radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.15), rgba(0,0,0,0)),
     radial-gradient(2px 2px at 40px 70px, rgba(245, 196, 56, 0.2), rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 90px 40px, rgba(244, 63, 94, 0.15), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 90px 40px, rgba(217, 70, 239, 0.2), rgba(0,0,0,0)),
     radial-gradient(1.5px 1.5px at 150px 120px, rgba(56, 189, 248, 0.2), rgba(0,0,0,0));
   background-repeat: repeat;
   background-size: 200px 200px;
@@ -94,9 +95,10 @@ h1, h2, h3, h4, h5 {
 }
 
 .cr-elixir-text {
-  background: linear-gradient(180deg, #fed7aa 0%, #fb7185 40%, #e11d48 100%);
+  background: linear-gradient(180deg, #f5d0fe 0%, #d946ef 45%, #86198f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(162, 28, 175, 0.5));
 }
 
 /* =========================================================
@@ -373,39 +375,39 @@ h1, h2, h3, h4, h5 {
   }
 }
 
-/* Elixir Droplet Badge */
+/* Elixir Droplet Badge - Authentic Clash Royale Violet / Magenta */
 .cr-elixir-drop {
   position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 17px;
-  height: 17px;
+  top: -5px;
+  left: -5px;
+  width: 20px;
+  height: 20px;
   border-radius: 50% 50% 50% 3px;
   transform: rotate(-45deg);
-  background: linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #9f1239 100%);
-  border: 1px solid #fff;
+  background: linear-gradient(135deg, #f0abfc 0%, #c026d3 50%, #701a75 100%);
+  border: 1.5px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 10px rgba(217, 70, 239, 0.8), 0 2px 6px rgba(0, 0, 0, 0.8);
   z-index: 20;
   pointer-events: none;
 }
 
 @media (min-width: 640px) {
   .cr-elixir-drop {
-    top: -5px;
-    left: -5px;
-    width: 24px;
-    height: 24px;
-    border-width: 1.5px;
+    top: -6px;
+    left: -6px;
+    width: 26px;
+    height: 26px;
+    border-width: 2px;
   }
 }
 
 .cr-elixir-drop span {
   transform: rotate(45deg);
   font-family: var(--font-display);
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   color: #fff;
   font-weight: 900;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -413,7 +415,7 @@ h1, h2, h3, h4, h5 {
 
 @media (min-width: 640px) {
   .cr-elixir-drop span {
-    font-size: 0.74rem;
+    font-size: 0.78rem;
   }
 }
 
