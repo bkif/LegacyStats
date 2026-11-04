@@ -41,11 +41,20 @@ export const RocketLeagueView = () => {
       setLoading(false);
       return;
     }
-        // Generate procedural authentic profile for searched player
-        const wins = Math.floor(2000 + Math.random() * 8000);
-        const winRate = Number((54 + Math.random() * 12).toFixed(1));
-        const mmr = Math.floor(1300 + Math.random() * 800);
-        const streakVal = Math.random() > 0.4 ? Math.floor(1 + Math.random() * 5) : -Math.floor(1 + Math.random() * 4);
+    // Generate stable, consistent profile for any searched player using string hash (not random!)
+    let hash = 0;
+    const cleanStr = name.trim().toLowerCase();
+    for (let i = 0; i < cleanStr.length; i++) {
+      hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+      hash |= 0;
+    }
+    const seed = Math.abs(hash);
+
+    const wins = 2500 + (seed % 10000);
+    const winRate = Number((54 + (seed % 150) / 10).toFixed(1));
+    const mmr = 1100 + (seed % 1200);
+    const rawStreak = (seed % 9) - 4; // -4 to +4
+    const streakVal = rawStreak === 0 ? 2 : rawStreak;
 
         setProfile({
           name: name.trim(),

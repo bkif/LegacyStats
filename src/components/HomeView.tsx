@@ -448,8 +448,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       <span>{card.elixir || 3}</span>
                     </div>
 
-                    {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
-
                     <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                       <CardImage
                         name={card.name}
@@ -593,7 +591,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                           return (
                             <div key={`my-${i}-${cIdx}`} className="text-center group">
                               <div className={`cr-card-frame ${variantClass} relative`}>
-                                {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
                                 <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                   <CardImage
                                     name={card.name}
@@ -627,7 +624,6 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                             return (
                               <div key={`opp-${i}-${cIdx}`} className="text-center group">
                                 <div className={`cr-card-frame ${variantClass} relative`}>
-                                  {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
                                   <div className="w-full aspect-[1/1.22] flex items-center justify-center">
                                     <CardImage
                                       name={card.name}
