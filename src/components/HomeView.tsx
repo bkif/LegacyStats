@@ -80,25 +80,23 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           }))
         }));
 
-        // Calculate streak from recent battles if streak isn't explicitly provided
-        let calcStreak = typeof p.streak === 'number' ? p.streak : 0;
-        if (calcStreak === 0 && normalizedBattles.length > 0) {
+        // Calculate actual current streak from the latest battles in battlelog
+        let currentStreak = 0;
+        if (normalizedBattles.length > 0) {
           const firstResult = normalizedBattles[0].result;
           if (firstResult === 'win') {
-            let count = 0;
             for (const b of normalizedBattles) {
-              if (b.result === 'win') count++;
+              if (b.result === 'win') currentStreak++;
               else break;
             }
-            calcStreak = count;
           } else if (firstResult === 'loss') {
-            let count = 0;
             for (const b of normalizedBattles) {
-              if (b.result === 'loss') count++;
+              if (b.result === 'loss') currentStreak--;
               else break;
             }
-            calcStreak = -count;
           }
+        } else if (typeof p.streak === 'number') {
+          currentStreak = p.streak;
         }
 
         setPlayer({
@@ -111,7 +109,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           losses: p.losses || 0,
           threeCrownWins: p.threeCrownWins || 0,
           battleCount: p.battleCount || (p.wins + p.losses),
-          streak: calcStreak,
+          streak: currentStreak,
           clan: p.clan || undefined,
           arena: p.arena || undefined,
           favouriteCard: p.favouriteCard || undefined,
@@ -421,13 +419,13 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* 8 Cards in 4x2 Grid */}
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               {deckCards.map((card, idx) => {
                 const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                 return (
                   <div
                     key={`${card.id || card.name}-${idx}`}
-                    className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}
+                    className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-2 relative`}
                     title={`${card.name} (Niv ${card.level ?? '?'})${card.variant === 'evo' ? ' - ÉVOLUTION' : card.variant === 'hero' ? ' - HÉROS' : ''}`}
                   >
                     <div className="cr-elixir-drop">
@@ -437,7 +435,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                     {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                     {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
 
-                    <div className="w-full h-14 sm:h-20 flex items-center justify-center p-0.5">
+                    <div className="w-full h-20 sm:h-28 flex items-center justify-center p-0.5">
                       <CardImage
                         name={card.name}
                         image={card.image}
@@ -447,7 +445,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                         heroImage={card.heroImage}
                       />
                     </div>
-                    <span className="cr-level-badge mt-1">
+                    <span className="cr-level-badge mt-1.5 font-black">
                       Niv {card.level ?? 14}
                     </span>
                   </div>
@@ -573,15 +571,15 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1.5">
                         Mon Deck
                       </div>
-                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
                         {myCards.map((card, cIdx) => {
                           const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                           return (
                             <div key={`my-${i}-${cIdx}`} className="text-center group">
-                              <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-0.5 sm:p-1 relative`}>
+                              <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}>
                                 {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                 {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
-                                <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                <div className="w-full h-16 sm:h-20 flex items-center justify-center p-0.5">
                                   <CardImage
                                     name={card.name}
                                     image={card.image}
@@ -592,7 +590,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                                   />
                                 </div>
                               </div>
-                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
+                              <span className="text-[9px] sm:text-[11px] font-bold text-slate-300 block mt-1 truncate leading-tight">
                                 {card.name}
                               </span>
                             </div>
@@ -602,20 +600,20 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                     </div>
 
                     {/* Deck Adverse */}
-                    <div className="bg-slate-950/60 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-white/5">
-                      <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    <div className="bg-slate-950/60 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-white/5">
+                      <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                         Deck Adverse
                       </div>
-                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
                         {oppCards.length > 0 ? (
                           oppCards.map((card, cIdx) => {
                             const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
                             return (
                               <div key={`opp-${i}-${cIdx}`} className="text-center group">
-                                <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-0.5 sm:p-1 relative`}>
+                                <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}>
                                   {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
                                   {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
-                                  <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                  <div className="w-full h-16 sm:h-20 flex items-center justify-center p-0.5">
                                     <CardImage
                                       name={card.name}
                                       image={card.image}
@@ -626,7 +624,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                                     />
                                   </div>
                                 </div>
-                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
+                                <span className="text-[9px] sm:text-[11px] font-bold text-slate-300 block mt-1 truncate leading-tight">
                                   {card.name}
                                 </span>
                               </div>

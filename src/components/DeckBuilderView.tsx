@@ -222,10 +222,10 @@ export const DeckBuilderView = () => {
                     <div className="cr-elixir-drop">
                       <span>{card.elixir}</span>
                     </div>
-                    <div className="w-full h-12 sm:h-16 flex items-center justify-center p-0.5">
+                    <div className="w-full h-16 sm:h-24 flex items-center justify-center p-0.5">
                       <CardImage name={card.name} image={card.image} rarity={card.rarity} />
                     </div>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 truncate w-full text-center mt-0.5">
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-200 truncate w-full text-center mt-1">
                       {card.name}
                     </span>
                     <span className="absolute inset-0 bg-red-950/80 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] sm:text-xs font-black text-rose-300 transition-opacity">
