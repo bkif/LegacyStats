@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getLocalCardImage, createCardSvgFallback } from '../data/cardImages';
-import { CardRarity } from '../types';
+import { CardRarity, CardVariant } from '../types';
 
 interface CardImageProps {
   name: string;
   image?: string;
   rarity?: CardRarity;
+  variant?: CardVariant;
+  evoImage?: string | null;
+  heroImage?: string | null;
   className?: string;
   alt?: string;
 }
@@ -24,6 +27,9 @@ export const CardImage = ({
   name,
   image,
   rarity = 'common',
+  variant = 'normal',
+  evoImage,
+  heroImage,
   className = '',
   alt
 }: CardImageProps) => {
@@ -31,17 +37,30 @@ export const CardImage = ({
   const color = RARITY_COLORS[rarity] || '#f7c75a';
   const svgFallback = createCardSvgFallback(name, color);
 
-  // Initial source prioritizes real API image
-  const initialSrc = image || cdnFallback;
-  const [src, setSrc] = useState<string>(initialSrc);
+  // Determine exact artwork: if played as evo -> evoImage, if played as hero -> heroImage, else normal image
+  const resolvedImage =
+    variant === 'evo' && evoImage
+      ? evoImage
+      : variant === 'hero' && heroImage
+      ? heroImage
+      : image || cdnFallback;
+
+  const [src, setSrc] = useState<string>(resolvedImage);
   const [triedProxy, setTriedProxy] = useState<boolean>(false);
 
   useEffect(() => {
-    if (image && image !== src) {
-      setSrc(image);
+    const nextImg =
+      variant === 'evo' && evoImage
+        ? evoImage
+        : variant === 'hero' && heroImage
+        ? heroImage
+        : image || cdnFallback;
+
+    if (nextImg && nextImg !== src) {
+      setSrc(nextImg);
       setTriedProxy(false);
     }
-  }, [image]);
+  }, [image, evoImage, heroImage, variant, cdnFallback]);
 
   const handleError = () => {
     // 1. Try worker image proxy if official URL had issue

@@ -64,11 +64,17 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           opponents: b.opponents || ['Adversaire'],
           cards: (b.cards || []).map((c: any) => ({
             ...c,
+            variant: c.variant || 'normal',
+            evoImage: c.evoImage || null,
+            heroImage: c.heroImage || null,
             image: c.image || getLocalCardImage(c.name),
             localImage: getLocalCardImage(c.name)
           })),
           oppCards: (b.oppCards || []).map((c: any) => ({
             ...c,
+            variant: c.variant || 'normal',
+            evoImage: c.evoImage || null,
+            heroImage: c.heroImage || null,
             image: c.image || getLocalCardImage(c.name),
             localImage: getLocalCardImage(c.name)
           }))
@@ -89,11 +95,17 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
           favouriteCard: p.favouriteCard || undefined,
           deck: deckList.map((c: any) => ({
             ...c,
+            variant: c.variant || 'normal',
+            evoImage: c.evoImage || null,
+            heroImage: c.heroImage || null,
             image: c.image || getLocalCardImage(c.name),
             localImage: getLocalCardImage(c.name)
           })),
           cards: (data.cards || []).map((c: any) => ({
             ...c,
+            variant: c.variant || 'normal',
+            evoImage: c.evoImage || null,
+            heroImage: c.heroImage || null,
             image: c.image || getLocalCardImage(c.name),
             localImage: getLocalCardImage(c.name)
           })),
@@ -342,23 +354,37 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
 
             {/* 8 Cards in 4x2 Grid */}
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
-              {deckCards.map((card, idx) => (
-                <div
-                  key={`${card.id || card.name}-${idx}`}
-                  className={`cr-card-frame r-${card.rarity || 'common'} p-1 sm:p-1.5`}
-                  title={`${card.name} (Niv ${card.level ?? '?'})`}
-                >
-                  <div className="cr-elixir-drop">
-                    <span>{card.elixir || 3}</span>
+              {deckCards.map((card, idx) => {
+                const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
+                return (
+                  <div
+                    key={`${card.id || card.name}-${idx}`}
+                    className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-1 sm:p-1.5 relative`}
+                    title={`${card.name} (Niv ${card.level ?? '?'})${card.variant === 'evo' ? ' - ÉVOLUTION' : card.variant === 'hero' ? ' - HÉROS' : ''}`}
+                  >
+                    <div className="cr-elixir-drop">
+                      <span>{card.elixir || 3}</span>
+                    </div>
+
+                    {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
+                    {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
+
+                    <div className="w-full h-14 sm:h-20 flex items-center justify-center p-0.5">
+                      <CardImage
+                        name={card.name}
+                        image={card.image}
+                        rarity={card.rarity}
+                        variant={card.variant}
+                        evoImage={card.evoImage}
+                        heroImage={card.heroImage}
+                      />
+                    </div>
+                    <span className="cr-level-badge mt-1">
+                      Niv {card.level ?? 14}
+                    </span>
                   </div>
-                  <div className="w-full h-14 sm:h-20 flex items-center justify-center p-0.5">
-                    <CardImage name={card.name} image={card.image} rarity={card.rarity} />
-                  </div>
-                  <span className="cr-level-badge mt-1">
-                    Niv {card.level ?? 14}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -480,18 +506,30 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                         Mon Deck
                       </div>
                       <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                        {myCards.map((card, cIdx) => (
-                          <div key={`my-${i}-${cIdx}`} className="text-center group">
-                            <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
-                              <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
-                                <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                        {myCards.map((card, cIdx) => {
+                          const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
+                          return (
+                            <div key={`my-${i}-${cIdx}`} className="text-center group">
+                              <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-0.5 sm:p-1 relative`}>
+                                {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
+                                {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
+                                <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                  <CardImage
+                                    name={card.name}
+                                    image={card.image}
+                                    rarity={card.rarity}
+                                    variant={card.variant}
+                                    evoImage={card.evoImage}
+                                    heroImage={card.heroImage}
+                                  />
+                                </div>
                               </div>
+                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
+                                {card.name}
+                              </span>
                             </div>
-                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
-                              {card.name}
-                            </span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -502,18 +540,30 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       </div>
                       <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                         {oppCards.length > 0 ? (
-                          oppCards.map((card, cIdx) => (
-                            <div key={`opp-${i}-${cIdx}`} className="text-center group">
-                              <div className={`cr-card-frame r-${card.rarity || 'common'} p-0.5 sm:p-1`}>
-                                <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
-                                  <CardImage name={card.name} image={card.image} rarity={card.rarity} />
+                          oppCards.map((card, cIdx) => {
+                            const variantClass = card.variant === 'evo' ? 'is-evo' : card.variant === 'hero' ? 'is-hero' : '';
+                            return (
+                              <div key={`opp-${i}-${cIdx}`} className="text-center group">
+                                <div className={`cr-card-frame r-${card.rarity || 'common'} ${variantClass} p-0.5 sm:p-1 relative`}>
+                                  {card.variant === 'evo' && <span className="cr-evo-badge">EVO</span>}
+                                  {card.variant === 'hero' && <span className="cr-hero-badge">HERO</span>}
+                                  <div className="w-full h-11 sm:h-14 flex items-center justify-center p-0.5">
+                                    <CardImage
+                                      name={card.name}
+                                      image={card.image}
+                                      rarity={card.rarity}
+                                      variant={card.variant}
+                                      evoImage={card.evoImage}
+                                      heroImage={card.heroImage}
+                                    />
+                                  </div>
                                 </div>
+                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
+                                  {card.name}
+                                </span>
                               </div>
-                              <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 block mt-0.5 truncate leading-tight">
-                                {card.name}
-                              </span>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
                           <div className="col-span-4 text-center py-5 text-xs text-slate-500 font-bold">
                             Deck adverse non enregistré
