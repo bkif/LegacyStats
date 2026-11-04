@@ -1,22 +1,57 @@
 import { RlPlayerProfile } from '../types';
 
+export const RL_WORKER_URL = "https://rocketl.pm00buq.workers.dev";
 export const RAPIDAPI_KEY = "dcffce928bmsh3a16fcdbd80cce3p19df42jsn5b6702c9098b";
 export const RAPIDAPI_HOST = "rocket-league1.p.rapidapi.com";
 
 export async function fetchLiveRocketLeagueProfile(username: string): Promise<Partial<RlPlayerProfile> | null> {
+  const encodedUser = encodeURIComponent(username.trim());
+  
+  // 1. First attempt: Dedicated Cloudflare Worker
   try {
-    const encodedUser = encodeURIComponent(username.trim());
+    const res = await fetch(`${RL_WORKER_URL}?player=${encodedUser}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (data.ranks || data.name || data.stats)) {
+        return data;
+      }
+    }
+  } catch {
+    // Continue to direct attempt
+  }
+
+  // 2. Direct gateway call with RapidAPI headers
+  try {
     const res = await fetch(`https://${RAPIDAPI_HOST}/ranks/${encodedUser}`, {
       headers: {
         'X-RapidAPI-Key': RAPIDAPI_KEY,
         'X-RapidAPI-Host': RAPIDAPI_HOST,
-        'User-Agent': 'LEGACYSTATS/1.0'
+        'User-Agent': 'RapidAPI Playground'
       }
     });
 
+    if (res.ok) {
+      const data = await res.json();
+      return data;
+    }
+  } catch {
+    // Fallback gracefully
+  }
+
+  return null;
+}
+
+export async function fetchLiveRlPopulation(): Promise<{ online: number; playlists: { name: string; population: number }[] } | null> {
+  try {
+    const res = await fetch(`https://${RAPIDAPI_HOST}/population`, {
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': RAPIDAPI_HOST,
+        'User-Agent': 'RapidAPI Playground'
+      }
+    });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch {
     return null;
   }
