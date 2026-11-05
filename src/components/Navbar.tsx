@@ -9,15 +9,15 @@ interface NavbarProps {
   onSelectGame: (game: 'clash-royale' | 'rocket-league') => void;
 }
 
-const CR_NAV_ITEMS: { tab: NavTab; label: string; icon: string }[] = [
-  { tab: 'home', label: 'Stats CR', icon: '🏰' },
-  { tab: 'cards', label: 'Deck Builder', icon: '🃏' },
-  { tab: 'description', label: 'Fiches', icon: '🔎' },
-  { tab: 'news', label: 'Équilibrages', icon: '⚡' },
-  { tab: 'esport', label: 'E-Sport', icon: '🏆' },
-  { tab: 'clans', label: 'Clans', icon: '🛡️' },
-  { tab: 'crl', label: 'CRL', icon: '🎬' },
-  { tab: 'contact', label: 'Contact', icon: '✉️' },
+const CR_NAV_ITEMS: { tab: NavTab; label: string }[] = [
+  { tab: 'home', label: 'Stats' },
+  { tab: 'cards', label: 'Deck Builder' },
+  { tab: 'description', label: 'Cartes' },
+  { tab: 'news', label: 'Équilibrages' },
+  { tab: 'esport', label: 'E-Sport' },
+  { tab: 'clans', label: 'Clans' },
+  { tab: 'crl', label: 'CRL' },
+  { tab: 'contact', label: 'Contact' },
 ];
 
 export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: NavbarProps) => {
@@ -37,166 +37,166 @@ export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: Na
   };
 
   return (
-    <header className="top">
-      <div className="bar">
-        {/* Brand LEGACYSTATS */}
-        <button
-          type="button"
-          className="flex items-center gap-2.5 sm:gap-3 bg-transparent border-0 p-0 text-left cursor-pointer group shrink-0"
-          onClick={() => handleTabClick('home')}
-          aria-label="LEGACYSTATS, accueil"
-        >
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-fuchsia-500 to-cyan-500 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-black text-white text-base">
-              LS
+    <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/[0.08]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        {/* Brand */}
+        <div className="flex items-center gap-5 shrink-0">
+          <button
+            type="button"
+            className="flex items-center gap-2.5 bg-transparent border-0 p-0 text-left cursor-pointer group"
+            onClick={() => handleTabClick('home')}
+            aria-label="LEGACYSTATS, accueil"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[1px] shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <div className="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center font-black text-amber-300 text-sm tracking-wider font-display">
+                LS
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="font-display text-base sm:text-lg tracking-wider cr-gold-text leading-none flex items-center gap-1.5">
-              <span>LEGACYSTATS</span>
+            <div className="flex flex-col">
+              <span className="font-display text-base tracking-wide text-white group-hover:text-amber-300 transition-colors">
+                LEGACY<span className="text-amber-400 font-black">STATS</span>
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 -mt-0.5 tracking-wider uppercase">
+                Analytics
+              </span>
             </div>
-            <div className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-wider flex items-center gap-1.5 mt-0.5">
-              <span className="text-amber-400">CLASH ROYALE</span>
-              <span>•</span>
-              <span className="text-cyan-400">ROCKET LEAGUE</span>
-            </div>
-          </div>
-        </button>
+          </button>
 
-        {/* Global Game Selector */}
-        <div className="flex items-center rounded-xl bg-slate-950/80 p-1 border border-white/10 shadow-inner">
-          <button
-            type="button"
-            onClick={() => { playTapSound(); onSelectGame('clash-royale'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-              activeGame === 'clash-royale'
-                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/25 scale-105'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <span>👑</span>
-            <span className="hidden sm:inline">Clash Royale</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => { playTapSound(); onSelectGame('rocket-league'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-              activeGame === 'rocket-league'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-md shadow-cyan-500/25 scale-105'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <span>🚀</span>
-            <span className="hidden sm:inline">Rocket League</span>
-          </button>
+          {/* Game Switcher (Segmented Control discret) */}
+          <div className="hidden sm:flex items-center bg-slate-900/90 rounded-lg p-1 border border-white/[0.06]">
+            <button
+              type="button"
+              onClick={() => { playTapSound(); onSelectGame('clash-royale'); }}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeGame === 'clash-royale'
+                  ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              Clash Royale
+            </button>
+            <button
+              type="button"
+              onClick={() => { playTapSound(); onSelectGame('rocket-league'); }}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeGame === 'rocket-league'
+                  ? 'bg-cyan-400/15 text-cyan-300 border border-cyan-400/30'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              Rocket League
+            </button>
+          </div>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1 nav-links" aria-label="Navigation principale">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Navigation principale">
           {activeGame === 'clash-royale' && (
-            <>
-              {CR_NAV_ITEMS.map(({ tab, label, icon }) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={currentTab === tab ? 'active' : ''}
-                  aria-current={currentTab === tab ? 'page' : undefined}
-                  onClick={() => handleTabClick(tab)}
-                >
-                  <span className="mr-1.5 opacity-80">{icon}</span>
-                  {label}
-                </button>
-              ))}
+            <div className="flex items-center gap-1 bg-slate-900/50 p-1 rounded-xl border border-white/[0.04]">
+              {CR_NAV_ITEMS.map(({ tab, label }) => {
+                const isActive = currentTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => handleTabClick(tab)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-amber-400 text-slate-950 shadow-sm font-black'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
               <a
                 href="https://www.youtube.com/@mhlgcr_off"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors px-3 py-1.5 rounded-full text-xs font-black bg-red-500/10 border border-red-500/20 ml-2"
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors ml-1"
               >
-                <span>▶</span>
-                <span>YouTube</span>
-                <span className="sr"> (nouvel onglet)</span>
+                YouTube
               </a>
-            </>
+            </div>
           )}
           {activeGame === 'rocket-league' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-cyan-300 bg-cyan-950/60 px-3 py-1.5 rounded-full border border-cyan-500/30">
-                🚀 Tracker Rocket League Actif
-              </span>
+            <div className="text-xs font-medium text-cyan-300 bg-cyan-950/40 px-3.5 py-1.5 rounded-lg border border-cyan-500/20">
+              Tracker Rocket League actif
             </div>
           )}
         </nav>
 
-        {/* Actions (Sound toggle & Mobile menu) */}
+        {/* Right tools (Sound toggle & Mobile menu) */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleSoundToggle}
-            className="p-2 rounded-xl bg-slate-800/80 border border-white/10 text-slate-300 hover:text-amber-400 hover:border-amber-400/40 transition-colors text-sm cursor-pointer"
+            className="w-9 h-9 rounded-lg bg-slate-900/80 border border-white/[0.08] text-slate-300 hover:text-white hover:border-white/20 transition-all flex items-center justify-center text-xs font-bold cursor-pointer"
             title={muted ? "Activer les sons" : "Couper les sons"}
             aria-label={muted ? "Activer les sons" : "Couper les sons"}
           >
-            {muted ? '🔇' : '🔊'}
+            {muted ? 'MUTED' : 'FX ON'}
           </button>
 
           {/* Mobile hamburger */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl bg-slate-800/80 border border-white/10 text-slate-300 hover:text-amber-400 text-sm cursor-pointer"
+            className="lg:hidden w-9 h-9 rounded-lg bg-slate-900/80 border border-white/[0.08] text-slate-300 hover:text-white flex items-center justify-center cursor-pointer"
             aria-label="Menu de navigation"
           >
-            ☰
+            <span className="text-lg leading-none">≡</span>
           </button>
         </div>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-4 py-3 flex flex-col gap-1 shadow-2xl">
-          <div className="flex items-center justify-between py-2 border-b border-white/10 mb-2">
-            <span className="text-xs font-bold text-slate-400">Jeu sélectionné :</span>
-            <div className="flex gap-1">
+        <div className="lg:hidden border-t border-white/[0.08] bg-slate-950/95 backdrop-blur-xl px-4 py-3 flex flex-col gap-1.5 shadow-2xl">
+          <div className="flex items-center justify-between py-2 border-b border-white/[0.06] mb-1">
+            <span className="text-xs font-semibold text-slate-400">Jeu actif :</span>
+            <div className="flex gap-1.5">
               <button
                 type="button"
                 onClick={() => { playTapSound(); onSelectGame('clash-royale'); setMobileMenuOpen(false); }}
-                className={`px-2.5 py-1 rounded text-xs font-black ${activeGame === 'clash-royale' ? 'bg-amber-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
+                className={`px-3 py-1 rounded-md text-xs font-bold ${activeGame === 'clash-royale' ? 'bg-amber-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
               >
-                👑 CR
+                Clash Royale
               </button>
               <button
                 type="button"
                 onClick={() => { playTapSound(); onSelectGame('rocket-league'); setMobileMenuOpen(false); }}
-                className={`px-2.5 py-1 rounded text-xs font-black ${activeGame === 'rocket-league' ? 'bg-cyan-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
+                className={`px-3 py-1 rounded-md text-xs font-bold ${activeGame === 'rocket-league' ? 'bg-cyan-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
               >
-                🚀 RL
+                Rocket League
               </button>
             </div>
           </div>
-          {activeGame === 'clash-royale' && CR_NAV_ITEMS.map(({ tab, label, icon }) => (
+          {activeGame === 'clash-royale' && CR_NAV_ITEMS.map(({ tab, label }) => (
             <button
               key={tab}
               type="button"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-left transition-colors ${
+              className={`flex items-center justify-between px-3 py-2 rounded-lg font-semibold text-sm text-left transition-colors ${
                 currentTab === tab
-                  ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
-                  : 'text-slate-300 hover:bg-white/5'
+                  ? 'bg-amber-400/10 text-amber-300 border border-amber-400/25'
+                  : 'text-slate-300 hover:bg-white/[0.04]'
               }`}
               onClick={() => handleTabClick(tab)}
             >
-              <span>{icon}</span>
               <span>{label}</span>
+              {currentTab === tab && <span className="text-amber-400 text-xs">●</span>}
             </button>
           ))}
           <a
             href="https://www.youtube.com/@mhlgcr_off"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-2.5 text-red-400 font-bold text-sm"
+            className="flex items-center justify-between px-3 py-2 text-red-400 font-semibold text-sm hover:bg-white/[0.04] rounded-lg"
           >
-            <span>▶</span>
             <span>Chaîne YouTube officielle</span>
+            <span className="text-xs">↗</span>
           </a>
         </div>
       )}

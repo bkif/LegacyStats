@@ -204,24 +204,27 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
   return (
     <main id="contenu" className="flex-1 w-full pb-16">
       {/* Hero section */}
-      <section className="relative overflow-hidden pt-14 pb-12 px-4 border-b border-white/10">
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 font-extrabold text-xs mb-4 tracking-wider uppercase">
-            <span>🇨🇭</span>
-            <span>Statistiques & Deck Tracker Suisse</span>
+      <section className="relative overflow-hidden pt-12 pb-10 px-4 border-b border-white/[0.06]">
+        {/* Subtle glow background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-amber-500/[0.04] blur-[120px] pointer-events-none rounded-full" />
+
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-slate-300 font-semibold text-xs mb-5">
+            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Clash Royale • Tracker en direct</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black cr-gold-text tracking-tight mb-4 drop-shadow-xl">
-            MH LEGACY
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+            Statistiques & Combats
           </h1>
-          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8">
-            Entre un tag de joueur Clash Royale et découvre en temps réel le profil, le deck équipé, les niveaux et les 20 derniers combats.
+          <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto font-medium leading-relaxed mb-6">
+            Analyse n'importe quel profil Clash Royale : deck actif, ratios de victoire, streaks et historique détaillé des derniers matchs.
           </p>
 
           {/* Search Form */}
-          <form onSubmit={onSubmit} className="max-w-xl mx-auto bg-slate-900/90 p-2 sm:p-2.5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md flex flex-col sm:flex-row gap-2">
+          <form onSubmit={onSubmit} className="max-w-md mx-auto bg-slate-900/90 p-1.5 rounded-2xl border border-white/[0.08] shadow-xl flex items-center gap-2">
             <div className="relative flex-1 flex items-center">
-              <span className="absolute left-4 text-amber-400 font-black text-lg">#</span>
+              <span className="absolute left-3.5 text-slate-500 font-bold text-sm">#</span>
               <input
                 type="text"
                 id="tag-input"
@@ -231,34 +234,34 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                 placeholder="V9JJGLL0G"
                 value={tagInput.replace(/^#/, '')}
                 onChange={(e) => setTagInput('#' + e.target.value.toUpperCase())}
-                className="w-full pl-9 pr-4 py-3 rounded-xl bg-slate-950/80 border border-white/5 text-slate-100 font-bold placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full pl-8 pr-3 py-2.5 rounded-xl bg-slate-950/60 border border-transparent text-slate-100 text-sm font-semibold placeholder:text-slate-600 focus:outline-none focus:border-amber-400/50"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="cr-btn-primary whitespace-nowrap"
+              className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 disabled:opacity-50"
             >
-              {loading ? 'Recherche…' : '🔍 Analyser'}
+              {loading ? 'Recherche…' : 'Analyser'}
             </button>
           </form>
 
           {/* Quick tags */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs text-slate-400">
-            <span className="font-bold">Tags populaires :</span>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4 text-xs text-slate-500">
+            <span className="font-medium">Exemples :</span>
             <button
               type="button"
               onClick={() => { setTagInput('#V9JJGLL0G'); handleSearch('V9JJGLL0G'); }}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-400/20 hover:text-amber-300 text-slate-300 transition-colors font-bold cursor-pointer"
+              className="px-2.5 py-0.5 rounded-md bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 transition-colors font-mono cursor-pointer border border-white/[0.04]"
             >
-              #V9JJGLL0G (Tag™)
+              #V9JJGLL0G
             </button>
             <button
               type="button"
               onClick={() => { setTagInput('#28CG0YUU'); handleSearch('28CG0YUU'); }}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-400/20 hover:text-amber-300 text-slate-300 transition-colors font-bold cursor-pointer"
+              className="px-2.5 py-0.5 rounded-md bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 transition-colors font-mono cursor-pointer border border-white/[0.04]"
             >
-              #28CG0YUU (SwissLegend)
+              #28CG0YUU
             </button>
           </div>
         </div>
@@ -275,48 +278,44 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
         {/* Player Profile & Active Deck Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           {/* 1. Player Profile Card (7 cols) */}
-          <div className="lg:col-span-7 bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden backdrop-blur-md">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
+          <div className="lg:col-span-7 bg-slate-900/60 border border-white/[0.08] rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden backdrop-blur-sm">
             {/* Profile Header */}
-            <div className="flex items-center gap-3 sm:gap-4 mb-5">
+            <div className="flex items-center gap-4 mb-6">
               <div className="relative shrink-0">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-b from-amber-300 to-amber-600 p-0.5 shadow-lg shadow-amber-500/25">
-                  <div className="w-full h-full bg-slate-950 rounded-[10px] sm:rounded-[14px] flex flex-col items-center justify-center">
-                    <span className="text-[10px] sm:text-xs text-amber-400 font-bold leading-none">NIV</span>
-                    <span className="text-lg sm:text-xl font-display text-white leading-tight">{player.level}</span>
-                  </div>
+                <div className="w-14 h-14 rounded-2xl bg-slate-950 border border-amber-400/40 p-1 flex flex-col items-center justify-center shadow-inner">
+                  <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider">Niv</span>
+                  <span className="text-xl font-extrabold text-white leading-tight">{player.level}</span>
                 </div>
-                <div className="absolute -top-2 -right-1 text-xs sm:text-sm">👑</div>
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl sm:text-3xl font-display text-white truncate max-w-full">{player.name}</h2>
-                  <span className="text-[11px] sm:text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white truncate max-w-full tracking-tight">{player.name}</h2>
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
                     {player.tag}
                   </span>
                   {player.streak !== undefined && player.streak !== 0 && (
                     <span
-                      className={`inline-flex items-center gap-1 text-[11px] sm:text-xs font-display px-2.5 py-0.5 rounded-full border shadow-md font-black ${
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
                         player.streak > 0
-                          ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border-emerald-500/50 shadow-emerald-500/20 animate-pulse'
-                          : 'bg-gradient-to-r from-rose-500/20 to-red-500/20 text-rose-300 border-rose-500/50 shadow-rose-500/20'
+                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
                       }`}
                     >
-                      {player.streak > 0 ? '🔥 WIN STREAK' : '❄️ LOSE STREAK'} : {Math.abs(player.streak)}
+                      <span className={`w-1.5 h-1.5 rounded-full ${player.streak > 0 ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                      {player.streak > 0 ? `Série : +${player.streak}V` : `Série : ${player.streak}D`}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-400 mt-1 flex-wrap font-bold">
+                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1 flex-wrap font-medium">
                   {player.clan && (
-                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md truncate max-w-[200px]">
-                      🛡️ {player.clan}
+                    <span className="text-slate-300 bg-white/[0.04] px-2.5 py-0.5 rounded-md border border-white/[0.05] truncate max-w-[200px]">
+                      Clan : <strong className="text-white font-semibold">{player.clan}</strong>
                     </span>
                   )}
                   {player.arena && (
-                    <span className="text-slate-300 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md truncate max-w-[180px]">
-                      🏟️ {player.arena}
+                    <span className="text-slate-300 bg-white/[0.04] px-2.5 py-0.5 rounded-md border border-white/[0.05] truncate max-w-[200px]">
+                      Arène : <strong className="text-white font-semibold">{player.arena}</strong>
                     </span>
                   )}
                 </div>
@@ -324,107 +323,98 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
             </div>
 
             {/* Stats Cards Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>🏆</span> Trophées
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Trophées
                 </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
+                <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   {player.trophies?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>👑</span> Record
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Record
                 </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
+                <div className="text-xl sm:text-2xl font-bold text-amber-300 tracking-tight">
                   {player.bestTrophies?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>⚔️</span> Winrate
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Winrate
                 </div>
-                <div className="text-lg sm:text-2xl font-display text-emerald-400">
+                <div className="text-xl sm:text-2xl font-bold text-emerald-400 tracking-tight">
                   {winRate}%
                 </div>
               </div>
 
-              {/* Streak Stat Box */}
-              <div className={`cr-stat-box p-2.5 sm:p-3.5 ${
-                (player.streak ?? 0) > 0
-                  ? 'border-emerald-500/40 bg-emerald-950/20'
-                  : (player.streak ?? 0) < 0
-                  ? 'border-rose-500/40 bg-rose-950/20'
-                  : ''
-              }`}>
-                <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  {(player.streak ?? 0) >= 0 ? (
-                    <span className="text-emerald-400">🔥 Win Streak</span>
-                  ) : (
-                    <span className="text-rose-400">❄️ Lose Streak</span>
-                  )}
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  3 Couronnes
                 </div>
-                <div className={`text-lg sm:text-2xl font-display ${
-                  (player.streak ?? 0) > 0 ? 'text-emerald-400' : (player.streak ?? 0) < 0 ? 'text-rose-400' : 'text-slate-300'
-                }`}>
-                  {player.streak && player.streak > 0
-                    ? `+${player.streak}`
-                    : player.streak && player.streak < 0
-                    ? `${player.streak}`
-                    : '0'}
-                </div>
-              </div>
-
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>✅</span> Victoires
-                </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
-                  {player.wins?.toLocaleString('fr-CH') || '—'}
-                </div>
-              </div>
-
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>❌</span> Défaites
-                </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
-                  {player.losses?.toLocaleString('fr-CH') || '—'}
-                </div>
-              </div>
-
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>🏰</span> 3 Couronnes
-                </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
+                <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                   {player.threeCrownWins?.toLocaleString('fr-CH') || '—'}
                 </div>
               </div>
 
-              <div className="cr-stat-box p-2.5 sm:p-3.5">
-                <div className="text-[10px] sm:text-xs font-bold text-cyan-400 uppercase tracking-wider mb-0.5 flex items-center justify-center gap-1">
-                  <span>🎮</span> Combats
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-emerald-400/80 uppercase tracking-wider mb-1">
+                  Victoires
                 </div>
-                <div className="text-lg sm:text-2xl font-display text-white">
+                <div className="text-lg sm:text-xl font-bold text-emerald-400 tracking-tight">
+                  {player.wins?.toLocaleString('fr-CH') || '—'}
+                </div>
+              </div>
+
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-rose-400/80 uppercase tracking-wider mb-1">
+                  Défaites
+                </div>
+                <div className="text-lg sm:text-xl font-bold text-rose-400 tracking-tight">
+                  {player.losses?.toLocaleString('fr-CH') || '—'}
+                </div>
+              </div>
+
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Matchs Totaux
+                </div>
+                <div className="text-lg sm:text-xl font-bold text-slate-200 tracking-tight">
                   {player.battleCount?.toLocaleString('fr-CH') || ((player.wins || 0) + (player.losses || 0)).toLocaleString('fr-CH')}
+                </div>
+              </div>
+
+              <div className="bg-slate-950/60 rounded-xl p-3 border border-white/[0.05]">
+                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  Carte Favorite
+                </div>
+                <div className="text-sm font-bold text-amber-300 truncate pt-1">
+                  {player.favouriteCard || '—'}
                 </div>
               </div>
             </div>
           </div>
 
           {/* 2. Active Deck Tray (5 cols) */}
-          <div className="lg:col-span-5 bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md">
+          <div className="lg:col-span-5 bg-slate-900/60 border border-white/[0.08] rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-base sm:text-lg font-display text-white flex items-center gap-2">
-                  <span>🃏</span> Deck Équipé
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  Deck Équipé
                 </h3>
-                <span className="text-[11px] sm:text-xs text-slate-400 font-bold">Élixir moyen : <strong className="text-fuchsia-400 font-black">{deckAvgElixir} ⚡</strong></span>
+                <span className="text-xs text-slate-400 font-medium">Coût moyen : <strong className="text-fuchsia-400 font-bold">{deckAvgElixir} élixir</strong></span>
               </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('cards')}
+                className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer px-2.5 py-1 rounded-md bg-amber-400/10 border border-amber-400/20"
+              >
+                Ouvrir Builder →
+              </button>
+            </div>
               <button
                 type="button"
                 onClick={() => onNavigate('cards')}
@@ -504,16 +494,22 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
         )}
 
         {/* 4. Recent Battles Stream (20 derniers combats) */}
-        <div className="bg-slate-900/80 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="bg-slate-900/60 border border-white/[0.08] rounded-2xl p-5 sm:p-6 shadow-xl backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
             <div>
-              <h3 className="text-lg sm:text-xl font-display text-white flex items-center gap-2">
-                <span>⚔️</span> 20 Derniers Combats
+              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                20 Derniers Combats
               </h3>
-              <div className="flex items-center gap-3 text-xs font-bold mt-1">
-                <span className="text-emerald-400">🏆 {winsCount} Victoires</span>
-                <span className="text-rose-400">❌ {lossCount} Défaites</span>
-                {drawCount > 0 && <span className="text-amber-400">🤝 {drawCount} Nuls</span>}
+              <div className="flex items-center gap-3 text-xs font-semibold mt-1">
+                <span className="text-emerald-400">{winsCount} Victoires</span>
+                <span className="text-slate-500">•</span>
+                <span className="text-rose-400">{lossCount} Défaites</span>
+                {drawCount > 0 && (
+                  <>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-amber-400">{drawCount} Nuls</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -522,7 +518,7 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
               {battles.map((b, i) => {
                 const isW = b.result === 'win';
                 const isL = b.result === 'loss';
-                const bg = isW ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : isL ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+                const bg = isW ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : isL ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : 'bg-amber-500/10 text-amber-300 border-amber-500/30';
                 return (
                   <button
                     key={`bt-${i}`}
@@ -532,10 +528,10 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
                       setActiveBattleId(`match-${i}`);
                       document.getElementById(`match-${i}`)?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg border font-display text-[10px] sm:text-xs flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${bg}`}
+                    className={`w-6 h-6 rounded-md border font-mono text-[11px] font-bold flex items-center justify-center transition-all hover:scale-105 cursor-pointer ${bg}`}
                     title={`Match ${i + 1} (${b.crowns}-${b.oppCrowns})`}
                   >
-                    {isW ? 'W' : isL ? 'L' : 'D'}
+                    {isW ? 'V' : isL ? 'D' : 'N'}
                   </button>
                 );
               })}
@@ -658,89 +654,83 @@ export const HomeView = ({ onNavigate }: HomeViewProps) => {
 
         {/* 5. Explorer le site (Quick Navigation Cards) */}
         <div>
-          <h2 className="text-xl font-display text-white mb-4">Explorer MH Legacy</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-4 tracking-tight">Accès Rapide</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('cards'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">🃏</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Deck Builder Pro
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Deck Builder Pro →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Compose ton deck parmi toutes les cartes, calcule l'élixir moyen et teste des synergies.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Compose ton deck parmi toutes les cartes officielles, calcule l'élixir et teste des combos.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('description'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">🔎</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Fiches des Cartes
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Encyclopédie des Cartes →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Toutes les cartes du jeu classées par rareté, coût en élixir et caractéristiques complètes.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Recherche et filtres par rareté, caractéristiques complètes et évolutions.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('news'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">⚡</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Équilibrages & Saisons
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Équilibrages & Mises à Jour →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Buffs, nerfs, refontes et nouveaux héros de la saison en cours et des saisons précédentes.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Buffs, nerfs, nouvelles cartes et notes de patch officielles des saisons.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('esport'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">🏆</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Scène E-Sport
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Scène E-Sport →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Les équipes légendaires (Team Liquid, SK Gaming, Tribe) et leurs palmarès en tournois.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Équipes professionnelles (Team Liquid, SK Gaming, Tribe) et classements.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('clans'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">🛡️</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Clan TagUrTilted
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Clan TagUrTilted →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Classement des membres, trophées de guerre et statistiques de dons hebdomadaires.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Classement des membres, guerres de clans et statistiques de dons.
               </p>
             </button>
 
             <button
               type="button"
               onClick={() => { playTapSound(); onNavigate('crl'); }}
-              className="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-white/10 hover:border-amber-400/50 hover:-translate-y-1 transition-all text-left group shadow-lg cursor-pointer"
+              className="p-4 rounded-xl bg-slate-900/60 border border-white/[0.08] hover:border-amber-400/40 hover:bg-slate-900/90 transition-all text-left group cursor-pointer shadow-sm"
             >
-              <div className="text-3xl mb-2">🎬</div>
-              <h3 className="font-display text-white text-base group-hover:text-amber-400 transition-colors">
-                Moments Forts CRL
+              <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                Clash Royale League (CRL) →
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Les replays et résumés vidéo des World Finals de la Clash Royale League.
+              <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
+                Replays officiels et temps forts des tournois mondiaux.
               </p>
             </button>
           </div>
