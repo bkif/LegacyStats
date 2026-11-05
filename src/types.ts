@@ -107,7 +107,7 @@ export interface ClanData {
 
 export type NavTab = 'home' | 'cards' | 'description' | 'news' | 'esport' | 'clans' | 'crl' | 'contact' | 'rocket-league';
 
-export type GameMode = 'clash-royale' | 'rocket-league';
+export type GameMode = 'clash-royale' | 'rocket-league' | null;
 
 export interface RlPlaylist {
   id: string;

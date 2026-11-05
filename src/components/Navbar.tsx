@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { NavTab } from '../types';
+import { NavTab, GameMode } from '../types';
 import { playTapSound, toggleMute, getMuted } from '../utils/audio';
 
 interface NavbarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
-  activeGame: 'clash-royale' | 'rocket-league';
-  onSelectGame: (game: 'clash-royale' | 'rocket-league') => void;
+  activeGame: GameMode;
+  onSelectGame: (game: GameMode) => void;
 }
 
 const CR_NAV_ITEMS: { tab: NavTab; label: string }[] = [
@@ -44,8 +44,9 @@ export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: Na
           <button
             type="button"
             className="flex items-center gap-2.5 bg-transparent border-0 p-0 text-left cursor-pointer group"
-            onClick={() => handleTabClick('home')}
-            aria-label="LEGACYSTATS, accueil"
+            onClick={() => onSelectGame(null)}
+            aria-label="LEGACYSTATS, accueil jeux"
+            title="Retour à la sélection des jeux"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 p-[1px] shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center font-black text-amber-300 text-sm tracking-wider font-display">
@@ -57,13 +58,24 @@ export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: Na
                 LEGACY<span className="text-amber-400 font-black">STATS</span>
               </span>
               <span className="text-[10px] font-semibold text-slate-400 -mt-0.5 tracking-wider uppercase">
-                Analytics
+                {activeGame ? 'Changer de jeu ↩' : 'Multi-Gaming'}
               </span>
             </div>
           </button>
 
-          {/* Game Switcher (Segmented Control discret) */}
+          {/* Game Switcher (Segmented Control) */}
           <div className="hidden sm:flex items-center bg-slate-900/90 rounded-lg p-1 border border-white/[0.06]">
+            <button
+              type="button"
+              onClick={() => { playTapSound(); onSelectGame(null); }}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeGame === null
+                  ? 'bg-white/15 text-white border border-white/20'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              Accueil
+            </button>
             <button
               type="button"
               onClick={() => { playTapSound(); onSelectGame('clash-royale'); }}
@@ -122,8 +134,22 @@ export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: Na
             </div>
           )}
           {activeGame === 'rocket-league' && (
-            <div className="text-xs font-medium text-cyan-300 bg-cyan-950/40 px-3.5 py-1.5 rounded-lg border border-cyan-500/20">
-              Tracker Rocket League actif
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-cyan-300 bg-cyan-950/40 px-3.5 py-1.5 rounded-lg border border-cyan-500/20">
+                Rocket League Tracker
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectGame(null)}
+                className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md transition-colors cursor-pointer"
+              >
+                Changer de jeu ↩
+              </button>
+            </div>
+          )}
+          {activeGame === null && (
+            <div className="text-xs font-medium text-slate-400">
+              Choisis un jeu ci-dessous pour commencer
             </div>
           )}
         </nav>
@@ -156,19 +182,26 @@ export const Navbar = ({ currentTab, onSelectTab, activeGame, onSelectGame }: Na
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-white/[0.08] bg-slate-950/95 backdrop-blur-xl px-4 py-3 flex flex-col gap-1.5 shadow-2xl">
           <div className="flex items-center justify-between py-2 border-b border-white/[0.06] mb-1">
-            <span className="text-xs font-semibold text-slate-400">Jeu actif :</span>
+            <span className="text-xs font-semibold text-slate-400">Jeu :</span>
             <div className="flex gap-1.5">
               <button
                 type="button"
+                onClick={() => { playTapSound(); onSelectGame(null); setMobileMenuOpen(false); }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold ${activeGame === null ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-300'}`}
+              >
+                Accueil
+              </button>
+              <button
+                type="button"
                 onClick={() => { playTapSound(); onSelectGame('clash-royale'); setMobileMenuOpen(false); }}
-                className={`px-3 py-1 rounded-md text-xs font-bold ${activeGame === 'clash-royale' ? 'bg-amber-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold ${activeGame === 'clash-royale' ? 'bg-amber-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
               >
                 Clash Royale
               </button>
               <button
                 type="button"
                 onClick={() => { playTapSound(); onSelectGame('rocket-league'); setMobileMenuOpen(false); }}
-                className={`px-3 py-1 rounded-md text-xs font-bold ${activeGame === 'rocket-league' ? 'bg-cyan-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold ${activeGame === 'rocket-league' ? 'bg-cyan-400 text-slate-950' : 'bg-white/5 text-slate-300'}`}
               >
                 Rocket League
               </button>

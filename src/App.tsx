@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavTab, GameMode } from './types';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import { GameSelectionLanding } from './components/GameSelectionLanding';
 import { HomeView } from './components/HomeView';
 import { DeckBuilderView } from './components/DeckBuilderView';
 import { CardsDescriptionView } from './components/CardsDescriptionView';
@@ -15,7 +16,12 @@ import { RocketLeagueView } from './components/RocketLeagueView';
 export function App() {
   const [activeGame, setActiveGame] = useState<GameMode>(() => {
     const hash = window.location.hash.replace('#', '');
-    return hash === 'rocket-league' ? 'rocket-league' : 'clash-royale';
+    if (hash === 'rocket-league') return 'rocket-league';
+    if (['clash-royale', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'].includes(hash)) {
+      return 'clash-royale';
+    }
+    // Par défaut à l'arrivée : page d'accueil de sélection de jeu
+    return null;
   });
 
   const [currentTab, setCurrentTab] = useState<NavTab>(() => {
@@ -33,12 +39,14 @@ export function App() {
       if (hash === 'rocket-league') {
         setActiveGame('rocket-league');
         setCurrentTab('rocket-league');
-      } else {
-        const validTabs: NavTab[] = ['home', 'cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'];
-        if (validTabs.includes(hash)) {
-          setActiveGame('clash-royale');
-          setCurrentTab(hash);
-        }
+      } else if (['cards', 'description', 'news', 'esport', 'clans', 'crl', 'contact'].includes(hash)) {
+        setActiveGame('clash-royale');
+        setCurrentTab(hash);
+      } else if (hash === 'clash-royale' || hash === 'home') {
+        setActiveGame('clash-royale');
+        setCurrentTab('home');
+      } else if (hash === 'select' || hash === '') {
+        setActiveGame(null);
       }
     };
     window.addEventListener('hashchange', handleHashChange);
@@ -56,9 +64,11 @@ export function App() {
     if (game === 'rocket-league') {
       setCurrentTab('rocket-league');
       window.location.hash = 'rocket-league';
-    } else {
+    } else if (game === 'clash-royale') {
       setCurrentTab('home');
       window.location.hash = 'home';
+    } else {
+      window.location.hash = 'select';
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -74,8 +84,10 @@ export function App() {
         onSelectGame={handleSelectGame}
       />
 
-      {/* Main Game Content */}
-      {activeGame === 'rocket-league' ? (
+      {/* Main Content Router */}
+      {activeGame === null ? (
+        <GameSelectionLanding onSelectGame={handleSelectGame} />
+      ) : activeGame === 'rocket-league' ? (
         <RocketLeagueView />
       ) : (
         <>
