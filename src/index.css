@@ -80,6 +80,23 @@ body::before {
 }
 
 /* Typography */
+.skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+}
+
+.skip:focus {
+  left: 16px;
+  top: 16px;
+  background: #f5c438;
+  color: #070b14;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
   letter-spacing: 0.02em;
