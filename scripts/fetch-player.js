@@ -4,7 +4,7 @@ const TAG = "29VLPC29";
 const headers = { Authorization: `Bearer ${process.env.CR_API_KEY}` };
 
 (async () => {
-  const res = await fetch(`https://proxy.royaleapi.dev/v1/players/%23${TAG}`, { headers });
+  const res = await fetch(`https://proxy.royaleapi.dev/v1/players/${TAG}`, { headers });
   if (!res.ok) throw new Error(`Erreur API : ${res.status}`);
   const p = await res.json();
 
