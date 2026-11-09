@@ -1,4 +1,4 @@
-const WORKER_URL = "cr-stats.pm00buq.workers.dev";
+const WORKER_URL = "https://cr-stats.pm00buq.workers.dev";
 
 const form = document.getElementById("search-form");
 const input = document.getElementById("tag-input");
