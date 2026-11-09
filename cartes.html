@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cartes & deck builder — MH Legacy</title>
+  <link rel="icon" href="images/logo_clash_royale.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cards.css">
+</head>
+<body>
+  <a class="skip" href="#contenu">Aller au contenu</a>
+  <header class="top">
+    <div class="bar">
+      <a href="index.html" aria-label="Accueil"><img src="images/logo_clash_royale.png" alt="" width="44" height="44"></a>
+      <nav class="nav" aria-label="Navigation principale"><div class="nav-links"></div></nav>
+    </div>
+  </header>
+
+  <main id="contenu" class="page">
+    <h1>Cartes</h1>
+    <p class="lead">Glisse une carte dans une case (ou clique dessus) pour composer ton deck. Clic droit sur une case pour la vider.</p>
+
+    <section aria-label="Deck">
+      <div class="deck-container">
+        <div class="deck-slot"></div><div class="deck-slot"></div>
+        <div class="deck-slot"></div><div class="deck-slot"></div>
+      </div>
+      <div class="deck-container">
+        <div class="deck-slot"></div><div class="deck-slot"></div>
+        <div class="deck-slot"></div><div class="deck-slot"></div>
+      </div>
+      <p id="average-elixir" aria-live="polite">Élixir moyen : —</p>
+    </section>
+
+    <section aria-label="Collection">
+      <div id="cards"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Ce contenu n’est pas affilié à, sponsorisé ni spécifiquement approuvé par Supercell…</p>
+  </footer>
+
+  <script src="js/nav.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/cards.js"></script>
+</body>
+</html>
