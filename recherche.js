@@ -81,7 +81,92 @@ function createCardTile(card) {
   return slot;
 }
 
-function renderPlayer(p, targetElement = null) {
+function renderBattlesSection(battles) {
+  if (!battles || !battles.length) {
+    return `<div class="cr-battles-section">
+      <h3 class="cr-title">20 derniers combats</h3>
+      <p class="cr-sub">Aucun combat récent enregistré.</p>
+    </div>`;
+  }
+
+  const list = battles.slice(0, 20);
+
+  // Petits carrés W / D d'affilée
+  const squaresHtml = list.map((b, idx) => {
+    const isWin = b.result === "win";
+    const isLoss = b.result === "loss";
+    const char = isWin ? "W" : (isLoss ? "D" : "-");
+    const label = isWin ? "Victoire" : (isLoss ? "Défaite" : "Égalité");
+    const opp = (b.opponents && b.opponents.length) ? b.opponents.join(", ") : "Adversaire";
+    const title = `#${idx + 1} - ${label} (${b.crowns ?? 0} - ${b.oppCrowns ?? 0}) contre ${opp}`;
+    const cls = isWin ? "cr-history-square-w" : (isLoss ? "cr-history-square-d" : "cr-history-square-draw");
+    return `<span class="cr-history-square ${cls}" title="${esc(title)}">${char}</span>`;
+  }).join("");
+
+  // Liste détaillée des combats
+  const battlesListHtml = battles.map((b) => {
+    const isWin = b.result === "win";
+    const isLoss = b.result === "loss";
+    const resultLabel = isWin ? "Victoire" : (isLoss ? "Défaite" : "Égalité");
+    const rowClass = isWin ? "cr-battle cr-win" : (isLoss ? "cr-battle cr-loss" : "cr-battle");
+    const crowns = b.crowns ?? 0;
+    const oppCrowns = b.oppCrowns ?? 0;
+    const oppName = (b.opponents && b.opponents.length) ? b.opponents.join(" & ") : "Adversaire inconnu";
+    const mode = b.mode ? b.mode.replace(/_/g, " ") : "";
+    const trophyChange = (b.trophyChange !== null && b.trophyChange !== undefined)
+      ? `<span class="cr-trophy">${b.trophyChange > 0 ? `+${b.trophyChange}` : b.trophyChange} 🏆</span>`
+      : "";
+
+    // Cartes du combat
+    const cardsList = b.cards || [];
+    const cardsHtml = cardsList.map(c => {
+      const cName = c.name || "Carte";
+      const cLvl = c.level ?? "?";
+      const rawImg = c.image || c.iconUrls?.medium || "";
+      const proxied = proxyImageUrl(rawImg);
+      const isEvo = c.evo || c.variant === "evo" || c.variant === "evolution";
+      return `
+        <div class="cr-slot cr-slot-small" title="${esc(cName)} (Niv ${cLvl})">
+          <div class="cr-tile cr-r-${c.rarity || 'common'}${isEvo ? " cr-v-evo" : ""}">
+            <div class="cr-art">
+              <img src="${proxied}" alt="${esc(cName)}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 80 80\\'><rect width=\\'80\\' height=\\'80\\' rx=\\'8\\' fill=\\'%231b2438\\'/></svg>';">
+            </div>
+            <span class="cr-lv">Niv ${cLvl}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="${rowClass}">
+        <div class="cr-battle-head">
+          <span class="cr-result">${resultLabel}</span>
+          <span class="cr-score">${crowns} - ${oppCrowns}</span>
+          ${trophyChange}
+        </div>
+        <p class="cr-meta">⚔️ Contre <strong>${esc(oppName)}</strong> ${mode ? `· <em>${esc(mode)}</em>` : ""}</p>
+        ${cardsHtml ? `<div class="cr-deck-small">${cardsHtml}</div>` : ""}
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="cr-battles-section">
+      <div class="cr-battles-header">
+        <h3 class="cr-title">20 derniers combats</h3>
+        <div class="cr-recent-streak" aria-label="Historique récent des 20 combats">
+          <span class="cr-streak-label">Série :</span>
+          <div class="cr-streak-squares">${squaresHtml}</div>
+        </div>
+      </div>
+      <div class="cr-battles cr-battlepanel">
+        ${battlesListHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderPlayer(p, battles = [], targetElement = null) {
   const container = targetElement || out;
   const deckList = p.deck ?? p.currentDeck ?? [];
   const clanName = typeof p.clan === "object" ? (p.clan?.name ?? "aucun") : (p.clan ?? "aucun");
@@ -93,6 +178,10 @@ function renderPlayer(p, targetElement = null) {
   const threeCrownWins = p.threeCrownWins?.toLocaleString("fr-CH") ?? "0";
   const arena = p.arena?.name ?? p.arena ?? "Arène légendaire";
   const gridId = `deck-grid-${Math.random().toString(36).substring(2, 9)}`;
+
+  // Liste des combats si présents dans p ou dans l'argument battles
+  const battleList = (battles && battles.length) ? battles : (p.battles ?? []);
+  const battlesHtml = renderBattlesSection(battleList);
 
   container.innerHTML = `
     <div class="cr-search-result-box cr-card">
@@ -126,6 +215,8 @@ function renderPlayer(p, targetElement = null) {
         <h3 class="cr-title">Deck de combat (${deckList.length} cartes)</h3>
         <div class="cr-deckgrid" id="${gridId}"></div>
       </div>
+
+      ${battlesHtml}
     </div>
   `;
 
@@ -174,16 +265,19 @@ async function searchTag(rawTag) {
 
     if (!data) throw new Error("Réponse vide du serveur.");
     const p = data.player ?? data;
-    renderPlayer(p);
+    const battles = data.battles ?? p.battles ?? [];
+    renderPlayer(p, battles);
   } catch (err) {
     console.warn("Échec requête directe :", err);
     const local = await loadLocalFallback(tag);
     if (local) {
+      const p = local.player ?? local;
+      const battles = local.battles ?? p.battles ?? [];
       out.innerHTML = `
-        <div class="cr-notice-offline">⚠️ ${esc(err.message)}<br>Affichage des statistiques sauvegardées pour <strong>#${esc(cleanTag(local.tag))}</strong> (${esc(local.name)}).</div>
+        <div class="cr-notice-offline">⚠️ ${esc(err.message)}<br>Affichage des statistiques sauvegardées pour <strong>#${esc(cleanTag(p.tag || local.tag))}</strong> (${esc(p.name || local.name)}).</div>
         <div id="search-player-target"></div>
       `;
-      renderPlayer(local, document.getElementById("search-player-target"));
+      renderPlayer(p, battles, document.getElementById("search-player-target"));
     } else {
       out.innerHTML = `<p class="cr-message">❌ ${esc(err.message)}</p>`;
     }
