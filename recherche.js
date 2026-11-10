@@ -91,30 +91,39 @@ function renderBattlesSection(battles) {
 
   const list = battles.slice(0, 20);
 
-  // Petits carrés W / D d'affilée
+  // Calcul ratio victoires / défaites
+  const winCount = list.filter(b => b.result === "win").length;
+  const lossCount = list.filter(b => b.result === "loss").length;
+  const drawCount = list.length - winCount - lossCount;
+  const winRate = list.length ? Math.round((winCount / list.length) * 100) : 0;
+
+  // Petits carrés W / D d'affilée au style percutant
   const squaresHtml = list.map((b, idx) => {
     const isWin = b.result === "win";
     const isLoss = b.result === "loss";
-    const char = isWin ? "W" : (isLoss ? "D" : "-");
+    const char = isWin ? "W" : (isLoss ? "D" : "E");
     const label = isWin ? "Victoire" : (isLoss ? "Défaite" : "Égalité");
     const opp = (b.opponents && b.opponents.length) ? b.opponents.join(", ") : "Adversaire";
-    const title = `#${idx + 1} - ${label} (${b.crowns ?? 0} - ${b.oppCrowns ?? 0}) contre ${opp}`;
+    const title = `#${idx + 1} • ${label} (${b.crowns ?? 0} - ${b.oppCrowns ?? 0}) contre ${opp}`;
     const cls = isWin ? "cr-history-square-w" : (isLoss ? "cr-history-square-d" : "cr-history-square-draw");
-    return `<span class="cr-history-square ${cls}" title="${esc(title)}">${char}</span>`;
+    return `<span class="cr-history-square ${cls}" title="${esc(title)}" data-index="${idx + 1}">${char}</span>`;
   }).join("");
 
   // Liste détaillée des combats
-  const battlesListHtml = battles.map((b) => {
+  const battlesListHtml = list.map((b, idx) => {
     const isWin = b.result === "win";
     const isLoss = b.result === "loss";
-    const resultLabel = isWin ? "Victoire" : (isLoss ? "Défaite" : "Égalité");
-    const rowClass = isWin ? "cr-battle cr-win" : (isLoss ? "cr-battle cr-loss" : "cr-battle");
+    const resultLabel = isWin ? "VICTOIRE" : (isLoss ? "DÉFAITE" : "ÉGALITÉ");
+    const resultIcon = isWin ? "👑" : (isLoss ? "💀" : "🤝");
+    const rowClass = isWin ? "cr-battle cr-win" : (isLoss ? "cr-battle cr-loss" : "cr-battle cr-draw");
     const crowns = b.crowns ?? 0;
     const oppCrowns = b.oppCrowns ?? 0;
-    const oppName = (b.opponents && b.opponents.length) ? b.opponents.join(" & ") : "Adversaire inconnu";
-    const mode = b.mode ? b.mode.replace(/_/g, " ") : "";
+    const oppName = (b.opponents && b.opponents.length) ? b.opponents.join(" & ") : "Adversaire";
+    const mode = b.mode ? b.mode.replace(/_/g, " ") : "Combat classique";
     const trophyChange = (b.trophyChange !== null && b.trophyChange !== undefined)
-      ? `<span class="cr-trophy">${b.trophyChange > 0 ? `+${b.trophyChange}` : b.trophyChange} 🏆</span>`
+      ? `<span class="cr-trophy-badge ${b.trophyChange >= 0 ? "cr-trophy-plus" : "cr-trophy-minus"}">
+          ${b.trophyChange > 0 ? `+${b.trophyChange}` : b.trophyChange} 🏆
+         </span>`
       : "";
 
     // Cartes du combat
@@ -126,12 +135,12 @@ function renderBattlesSection(battles) {
       const proxied = proxyImageUrl(rawImg);
       const isEvo = c.evo || c.variant === "evo" || c.variant === "evolution";
       return `
-        <div class="cr-slot cr-slot-small" title="${esc(cName)} (Niv ${cLvl})">
+        <div class="cr-slot cr-slot-mini" title="${esc(cName)} (Niv ${cLvl})">
           <div class="cr-tile cr-r-${c.rarity || 'common'}${isEvo ? " cr-v-evo" : ""}">
             <div class="cr-art">
               <img src="${proxied}" alt="${esc(cName)}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 80 80\\'><rect width=\\'80\\' height=\\'80\\' rx=\\'8\\' fill=\\'%231b2438\\'/></svg>';">
             </div>
-            <span class="cr-lv">Niv ${cLvl}</span>
+            <span class="cr-lv">N.${cLvl}</span>
           </div>
         </div>
       `;
@@ -139,12 +148,28 @@ function renderBattlesSection(battles) {
 
     return `
       <div class="${rowClass}">
-        <div class="cr-battle-head">
-          <span class="cr-result">${resultLabel}</span>
-          <span class="cr-score">${crowns} - ${oppCrowns}</span>
-          ${trophyChange}
+        <div class="cr-battle-header-row">
+          <div class="cr-battle-badge-group">
+            <span class="cr-battle-badge ${isWin ? 'badge-win' : (isLoss ? 'badge-loss' : 'badge-draw')}">
+              <span class="cr-badge-icon">${resultIcon}</span>
+              ${resultLabel}
+            </span>
+            <span class="cr-battle-score-pill">
+              <span class="crown-player">${crowns}</span>
+              <span class="crown-sep">-</span>
+              <span class="crown-opp">${oppCrowns}</span>
+            </span>
+          </div>
+          <div class="cr-battle-trophies-wrap">
+            ${trophyChange}
+          </div>
         </div>
-        <p class="cr-meta">⚔️ Contre <strong>${esc(oppName)}</strong> ${mode ? `· <em>${esc(mode)}</em>` : ""}</p>
+        <div class="cr-battle-info-row">
+          <div class="cr-battle-details">
+            <span class="cr-battle-opponent">⚔️ VS <strong>${esc(oppName)}</strong></span>
+            <span class="cr-battle-mode">${esc(mode)}</span>
+          </div>
+        </div>
         ${cardsHtml ? `<div class="cr-deck-small">${cardsHtml}</div>` : ""}
       </div>
     `;
@@ -152,10 +177,21 @@ function renderBattlesSection(battles) {
 
   return `
     <div class="cr-battles-section">
-      <div class="cr-battles-header">
-        <h3 class="cr-title">20 derniers combats</h3>
-        <div class="cr-recent-streak" aria-label="Historique récent des 20 combats">
-          <span class="cr-streak-label">Série :</span>
+      <div class="cr-battles-header-card">
+        <div class="cr-battles-title-group">
+          <h3 class="cr-title">⚔️ 20 Derniers Combats</h3>
+          <div class="cr-battles-summary">
+            <span class="cr-summary-pill cr-summary-win">${winCount}V</span>
+            <span class="cr-summary-pill cr-summary-loss">${lossCount}D</span>
+            ${drawCount > 0 ? `<span class="cr-summary-pill cr-summary-draw">${drawCount}E</span>` : ""}
+            <span class="cr-summary-winrate">${winRate}% Victoires</span>
+          </div>
+        </div>
+        <div class="cr-recent-streak-box" aria-label="Historique récent des 20 combats">
+          <div class="cr-streak-top-row">
+            <span class="cr-streak-label">SÉRIE RÉCENTE</span>
+            <span class="cr-streak-legend">W = Victoire • D = Défaite</span>
+          </div>
           <div class="cr-streak-squares">${squaresHtml}</div>
         </div>
       </div>
