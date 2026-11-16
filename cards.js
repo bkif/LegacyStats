@@ -19,7 +19,7 @@ async function displayCards() {
         });
 
         element.innerHTML = `
-            <img src="${card.image}">
+            <img src="/cards/${card.id}">
         `;
 
         container.appendChild(element);

@@ -265,6 +265,7 @@ async function searchTag(rawTag) {
 
     if (!data) throw new Error("Réponse vide du serveur.");
     const p = data.player ?? data;
+<<<<<<< Updated upstream
     const battles = data.battles ?? p.battles ?? [];
     renderPlayer(p, battles);
   } catch (err) {
@@ -281,6 +282,38 @@ async function searchTag(rawTag) {
     } else {
       out.innerHTML = `<p class="cr-message">❌ ${esc(err.message)}</p>`;
     }
+=======
+const deckList = p.deck ?? p.currentDeck ?? [];
+const deck = document.createElement("div");
+
+deckList.forEach((c) => {
+  const img = document.createElement("img");
+  
+  // encodeURIComponent va transformer "ma carte" en "ma%20carte"
+  img.src = `cards-150/${c.name.replaceAll(' ', '')}.png`;
+
+  
+  img.alt = c.name; // L'attribut alt peut garder les espaces normaux
+  img.width = 60;
+  img.referrerPolicy = "no-referrer";
+  deck.appendChild(img);
+});
+
+
+    const clanName = typeof p.clan === "object" ? (p.clan?.name ?? "aucun") : (p.clan ?? "aucun");
+    const level = p.level ?? p.expLevel;
+
+    out.replaceChildren(
+      line(`${p.name} (${p.tag}) - niveau ${level}`),
+      line(`Trophées : ${p.trophies} (record : ${p.bestTrophies})`),
+      line(`Victoires : ${p.wins} / Défaites : ${p.losses}`),
+      line(`Victoires 3 couronnes : ${p.threeCrownWins}`),
+      line(`Clan : ${clanName}`),
+      deck
+    );
+  } catch {
+    out.replaceChildren(line("Impossible de contacter le serveur."));
+>>>>>>> Stashed changes
   }
 }
 
